@@ -1,3 +1,5 @@
+https://github.com/user-attachments/assets/283815df-d370-4001-bbd2-b3b4dd41bd2c
+
 # Caelestia Live Wallpapers Integration
 
 An unofficial integration made by me for the [Caelestia](https://github.com/caelestia-dots/caelestia) ecosystem that seamlessly adds native support for Video Live Wallpapers (.mp4, .mkv, .webm) directly into the UI.
