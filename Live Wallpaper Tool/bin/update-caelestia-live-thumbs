@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+import os
+import sys
+import subprocess
+import json
+
+HOME = os.path.expanduser("~")
+THUMBS_DIR = os.path.join(HOME, ".cache/caelestia/live_thumbs")
+JSON_CACHE = os.path.join(HOME, ".cache/caelestia/wallpaper_properties.json")
+
+# Try to get folders dynamically or use arguments if Caelestia provides them
+def get_pictures_dir():
+    try:
+        res = subprocess.run(["xdg-user-dir", "PICTURES"], stdout=subprocess.PIPE, text=True)
+        path = res.stdout.strip()
+        if path and os.path.exists(path):
+            return path
+    except:
+        pass
+    for fallback in ["Pictures", "Imágenes", "Images", "Bilder"]:
+        path = os.path.join(HOME, fallback)
+        if os.path.exists(path):
+            return path
+    return os.path.join(HOME, "Pictures")
+
+PICTURES_DIR = get_pictures_dir()
+
+# Arg 1: Static directory, Arg 2: Animated directory
+WALLPAPERS_DIR = sys.argv[1] if len(sys.argv) > 1 else os.path.join(PICTURES_DIR, "Wallpapers")
+LIVE_WALLPAPERS_DIR = sys.argv[2] if len(sys.argv) > 2 else os.path.join(PICTURES_DIR, "Live-Wallpapers")
+
+os.makedirs(THUMBS_DIR, exist_ok=True)
+properties = {}
+
+def get_ffprobe_info(filepath):
+    try:
+        cmd = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,r_frame_rate", "-of", "json", filepath]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        data = json.loads(res.stdout)
+        stream = data["streams"][0]
+        fps_str = stream.get("r_frame_rate", "0/1")
+        num, den = map(int, fps_str.split('/'))
+        return stream.get("width", 0), stream.get("height", 0), (round(num / den) if den != 0 else 0)
+    except:
+        return None, None, None
+
+def process_file(filepath, is_video):
+    ext = filepath.split(".")[-1].upper()
+    w, h, fps = get_ffprobe_info(filepath)
+    if w and h:
+        properties[filepath] = f"{w}x{h}, {ext}, {fps} FPS" if is_video and fps else f"{w}x{h}, {ext}"
+    else:
+        properties[filepath] = f"{ext}"
+    
+    if is_video:
+        thumb_path = os.path.join(THUMBS_DIR, f"{os.path.basename(filepath)}.jpg")
+        if not os.path.exists(thumb_path):
+            print(f"Generating thumbnail for: {os.path.basename(filepath)}")
+            subprocess.run(["ffmpeg", "-i", filepath, "-ss", "00:00:00", "-vframes", "1", thumb_path, "-y", "-loglevel", "error"])
+
+print("Searching for wallpapers and videos...")
+for base_dir, is_vid, exts in [(LIVE_WALLPAPERS_DIR, True, ('.mp4', '.mkv', '.webm', '.avi', '.mov')), 
+                               (WALLPAPERS_DIR, False, ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif'))]:
+    if os.path.exists(base_dir):
+        for root, _, files in os.walk(base_dir):
+            for f in files:
+                if f.lower().endswith(exts):
+                    process_file(os.path.join(root, f), is_vid)
+
+with open(JSON_CACHE, "w") as f:
+    json.dump(properties, f)
+
+print(f"Done! Found {len(properties)} wallpapers.")
