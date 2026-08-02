@@ -6,6 +6,10 @@ Una integración no oficial realizada por mi para el ecosistema [Caelestia](http
 
 *También disponible en [Inglés (English)](README.md).*
 
+## Nota de Compatibilidad
+Este script de instalación asume el uso de rutas estándar de Linux y permisos de escritura en `/usr/lib` y `/etc`. Está pensado y probado principalmente para **Arch Linux** y sus derivadas (CachyOS, EndeavourOS, etc.).
+- Asegúrate de tener Caelestia instalado antes de ejecutar este script. Esta modificación parchea los archivos del sistema en `/etc/xdg/quickshell/caelestia/` y crea copias de seguridad de los archivos originales (`.bak`).
+
 ## Características
 
 - **Integración Nativa**: Los fondos animados aparecen en el Lanzador Rápido de Caelestia (>Wallpaper) y en los menús de Configuración (Nexus), junto a los fondos estáticos.
@@ -64,10 +68,6 @@ Si deseas eliminar esta modificación y volver al comportamiento original de Cae
 cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
 sudo ./uninstall.sh
 ```
-
-## Nota de Compatibilidad
-Este script de instalación asume el uso de rutas estándar de Linux y permisos de escritura en `/usr/lib` y `/etc`. Está pensado y probado principalmente para **Arch Linux** y sus derivadas (CachyOS, EndeavourOS, etc.).
-- Asegúrate de tener Caelestia instalado antes de ejecutar este script. Esta modificación parchea los archivos del sistema en `/etc/xdg/quickshell/caelestia/` y crea copias de seguridad de los archivos originales (`.bak`).
 
 ## Agradecimientos
 

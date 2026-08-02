@@ -10,6 +10,10 @@ An unofficial integration made by me for the [Caelestia](https://github.com/cael
 
 *Also available in [Spanish (Español)](README_es.md).*
 
+## Compatibility Note
+This installation script relies on standard Linux filesystem paths and write-access to `/usr/lib` and `/etc`. It is primarily designed and tested for **Arch Linux** and its derivatives (CachyOS, EndeavourOS, etc.).
+- Make sure you have Caelestia installed before running this script. This modification patches system files in `/etc/xdg/quickshell/caelestia/` and creates backups of the original files (`.bak`).
+
 ## Features
 
 - **Native UI Integration**: Live wallpapers appear beautifully in the Caelestia Quick Launcher (>Wallpaper) and in the Settings menus (Nexus), side-by-side with your static wallpapers.
@@ -67,10 +71,6 @@ If you wish to remove this modification and revert to the stock Caelestia behavi
 cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
 sudo ./uninstall.sh
 ```
-
-## Compatibility Note
-This installation script relies on standard Linux filesystem paths and write-access to `/usr/lib` and `/etc`. It is primarily designed and tested for **Arch Linux** and its derivatives (CachyOS, EndeavourOS, etc.).
-- Make sure you have Caelestia installed before running this script. This modification patches system files in `/etc/xdg/quickshell/caelestia/` and creates backups of the original files (`.bak`).
 
 ## Acknowledgements
 
