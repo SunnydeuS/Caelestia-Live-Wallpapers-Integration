@@ -65,8 +65,9 @@ cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
 sudo ./uninstall.sh
 ```
 
-## Nota
-Asegúrate de tener Caelestia instalado antes de ejecutar este script. Esta modificación parchea los archivos del sistema en `/etc/xdg/quickshell/caelestia/` y crea copias de seguridad de los archivos originales (`.bak`).
+## Nota de Compatibilidad
+Este script de instalación asume el uso de rutas estándar de Linux y permisos de escritura en `/usr/lib` y `/etc`. Está pensado y probado principalmente para **Arch Linux** y sus derivadas (CachyOS, EndeavourOS, etc.).
+- Asegúrate de tener Caelestia instalado antes de ejecutar este script. Esta modificación parchea los archivos del sistema en `/etc/xdg/quickshell/caelestia/` y crea copias de seguridad de los archivos originales (`.bak`).
 
 ## Agradecimientos
 
