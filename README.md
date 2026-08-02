@@ -1,4 +1,5 @@
 https://github.com/user-attachments/assets/283815df-d370-4001-bbd2-b3b4dd41bd2c
+https://github.com/user-attachments/assets/503f5210-0bdb-415a-88fd-2f328af92baf
 
 # Caelestia Live Wallpapers Integration
 
