@@ -1,6 +1,6 @@
 # Integración de Fondos Animados para Caelestia
 
-Una integración no oficial realizada por mi para el ecosistema [Caelestia](https://github.com/CaelestiaOS/Caelestia) que añade soporte nativo para Fondos Animados en video (.mp4, .mkv, .webm) directamente en la interfaz.
+Una integración no oficial realizada por mi para el ecosistema [Caelestia](https://github.com/caelestia-dots/caelestia) que añade soporte nativo para Fondos Animados en video (.mp4, .mkv, .webm) directamente en la interfaz.
 
 > **Nota**: Todo el crédito de la shell es para el equipo de Caelestia. Este proyecto es simplemente mi integración personalizada para añadir capacidades de fondos animados y pequeñas funciones adicionales.
 
