@@ -20,6 +20,7 @@ FILES=(
     "modules/nexus/pages/wallandstyle/WallpaperSelect.qml"
     "modules/nexus/pages/wallandstyle/WallpaperCategory.qml"
     "modules/nexus/pages/WallpaperAndStyle.qml"
+    "modules/nexus/common/WallItem.qml"
 )
 
 for file in "${FILES[@]}"; do
