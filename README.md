@@ -17,22 +17,22 @@ This installation script relies on standard Linux filesystem paths and write-acc
 ## Features
 
 - **Native UI Integration**: Live wallpapers appear beautifully in the Caelestia Quick Launcher (>Wallpaper) and in the Settings menus (Nexus), side-by-side with your static wallpapers.
-- **Smart Pause / Game Mode**: Videos will automatically pause when a window is fullscreen (like playing a game) to save system resources. It specifically ignores browsers, so you don't lose your wallpaper while watching a YouTube video in fullscreen.
-- **Auto-Thumbnail Generation**: Automatically generates `.jpg` thumbnails for your videos behind the scenes so the Caelestia menus load blazingly fast without freezing.
-- **Seamless Settings Integration**: The settings menu correctly fetches and displays the live wallpaper category without bugs.
+- **Smart Pause / Game Mode**: Videos will automatically pause when a window is fullscreen (like playing a game) to save system resources.
+- **Auto-Thumbnail Generation**: Automatically generates `.jpg` thumbnails for the videos.
+- **Settings Integration (Nexus)**: The settings menu correctly fetches and displays the live wallpaper category.
 
 ## How it works
 
 1. It replaces the default `Image` component with a `MediaPlayer` element in Caelestia's background module.
-2. It hooks into `Hypr.activeToplevel` and `GameMode.enabled` to detect fullscreen states and pause the video engine accordingly.
+2. It uses `Hypr.activeToplevel` and `GameMode.enabled` to detect fullscreen states and pause the video engine.
 3. It installs a Python script (`update-caelestia-live-thumbs`) that automatically crawls your Live-Wallpapers folder and extracts a frame to serve as a thumbnail in `~/.cache/caelestia/live_thumbs/`.
-4. It patches Caelestia's setting pages (`WallpaperSelect.qml`, `WallpaperCategory.qml`, and `WallpaperAndStyle.qml`) to intelligently load these thumbnails instead of crashing.
+4. It patches Caelestia's setting pages (`WallpaperSelect.qml`, `WallpaperCategory.qml`, and `WallpaperAndStyle.qml`) to load the thumbnails instead of crashing.
 
 ## Dependencies
 
 Before installing, make sure you have the following packages installed on your system:
 - **`ffmpeg`**: Required for extracting thumbnails behind the scenes.
-- **`xdg-user-dirs`**: Used to accurately locate your Pictures directory.
+- **`xdg-user-dirs`**: Used to locate your Pictures directory.
 - **`qt6-multimedia`** and **`qt6-multimedia-ffmpeg`** (or your distro's equivalent backend): Required by the QML `MediaPlayer` to actually play the video files in the UI.
 
 ## Where do I put my Live Wallpapers?
@@ -40,7 +40,7 @@ Simply place your `.mp4`, `.mkv`, or `.webm` files inside `~/Pictures/Live-Wallp
 
 ## Installation
 
-1. Clone this repository to your local machine:
+1. Clone this repository:
    ```bash
    git clone https://github.com/SunnydeuS/Caelestia-Live-Wallpapers-Integration.git
    cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
@@ -74,4 +74,4 @@ sudo ./uninstall.sh
 
 ## Acknowledgements
 
-Special thanks to [**AdiAmbassador**](https://github.com/adiambassador) for the inspiration behind this project. And of course, massive thanks to the **Caelestia** team for their incredible shell.
+Special thanks to [**AdiAmbassador**](https://github.com/adiambassador) for the inspiration behind this project. And of course, massive thanks to the **Caelestia** team.

@@ -13,22 +13,22 @@ Este script de instalación asume el uso de rutas estándar de Linux y permisos 
 ## Características
 
 - **Integración Nativa**: Los fondos animados aparecen en el Lanzador Rápido de Caelestia (>Wallpaper) y en los menús de Configuración (Nexus), junto a los fondos estáticos.
-- **Pausa Inteligente / Modo Juego**: Los videos se pausarán automáticamente cuando una ventana esté en pantalla completa (como al jugar) para ahorrar recursos del sistema. Ignora específicamente los navegadores, para que no pierdas tu fondo animado mientras ves un video de YouTube a pantalla completa.
-- **Generación Automática de Miniaturas**: Genera automáticamente miniaturas `.jpg` de tus videos en segundo plano para que los menús de Caelestia carguen rapidísimo sin congelarse.
-- **Integración Perfecta en Ajustes**: El menú de configuración carga y muestra correctamente la categoría de fondos animados.
+- **Pausa Inteligente / Modo Juego**: Los videos se pausarán automáticamente cuando una ventana esté en pantalla completa (como al jugar) para ahorrar recursos del sistema.
+- **Generación Automática de Miniaturas**: Genera automáticamente miniaturas `.jpg` de los videos.
+- **Integración en Ajustes (Nexus)**: El menú de configuración carga y muestra correctamente la categoría de fondos animados.
 
 ## Cómo funciona
 
 1. Reemplaza el componente `Image` por defecto con un elemento `MediaPlayer` en el módulo de fondo de Caelestia.
-2. Se engancha a `Hypr.activeToplevel` y `GameMode.enabled` para detectar estados de pantalla completa y pausar el motor de video.
+2. Usa `Hypr.activeToplevel` y `GameMode.enabled` para detectar estados de pantalla completa y pausar el motor de video.
 3. Instala un script en Python (`update-caelestia-live-thumbs`) que escanea automáticamente tu carpeta de Live-Wallpapers y extrae un fotograma para usarlo como miniatura en `~/.cache/caelestia/live_thumbs/`.
-4. Modifica las páginas de configuración de Caelestia (`WallpaperSelect.qml`, `WallpaperCategory.qml`, y `WallpaperAndStyle.qml`) para que carguen de forma inteligente estas miniaturas sin crashear.
+4. Modifica las páginas de configuración de Caelestia (`WallpaperSelect.qml`, `WallpaperCategory.qml`, y `WallpaperAndStyle.qml`) para que carguen las miniaturas sin crashear.
 
 ## Dependencias
 
 Antes de instalar, asegúrate de tener los siguientes paquetes instalados en tu sistema:
 - **`ffmpeg`**: Necesario para extraer miniaturas en segundo plano.
-- **`xdg-user-dirs`**: Utilizado para localizar de forma precisa tu carpeta de Imágenes.
+- **`xdg-user-dirs`**: Utilizado para localizar tu carpeta de Imágenes.
 - **`qt6-multimedia`** y **`qt6-multimedia-ffmpeg`** (o el backend equivalente en tu distribución): Necesarios por el `MediaPlayer` de QML para reproducir los archivos de video en la interfaz.
 
 ## ¿Dónde pongo mis Fondos Animados?
@@ -37,7 +37,7 @@ Simplemente coloca tus archivos `.mp4`, `.mkv`, o `.webm` dentro de `~/Imágenes
 
 ## Instalación
 
-1. Clona este repositorio en tu máquina local:
+1. Clona este repositorio:
    ```bash
    git clone https://github.com/SunnydeuS/Caelestia-Live-Wallpapers-Integration.git
    cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
@@ -71,4 +71,4 @@ sudo ./uninstall.sh
 
 ## Agradecimientos
 
-Agradecimientos especiales a [**AdiAmbassador**](https://github.com/adiambassador) por la inspiración detrás de este proyecto. Y por supuesto, muchísimas gracias al equipo de **Caelestia** por su increíble shell.
+Agradecimientos especiales a [**AdiAmbassador**](https://github.com/adiambassador) por la inspiración detrás de este proyecto. Y por supuesto, muchísimas gracias al equipo de **Caelestia**.
