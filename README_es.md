@@ -48,7 +48,7 @@ Simplemente coloca tus archivos `.mp4`, `.mkv`, o `.webm` dentro de `~/Imágenes
    sudo ./install.sh
    ```
 
-3. Reinicia tu sistema para aplicar los cambios y cargar correctamente las resoluciones de imagen/video:
+3. Recarga la shell para aplicar los cambios presionando `Ctrl+Super+Alt+R` (o `Ctrl+Supr+Alt+R`). Si los cambios aún no se reflejan, reinicia tu sistema para cargar correctamente las resoluciones de imagen/video:
    ```bash
    systemctl reboot
    ```

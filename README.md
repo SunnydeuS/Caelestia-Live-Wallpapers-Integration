@@ -51,7 +51,7 @@ Simply place your `.mp4`, `.mkv`, or `.webm` files inside `~/Pictures/Live-Wallp
    sudo ./install.sh
    ```
 
-3. Restart your system to apply the changes and properly load image/video resolutions:
+3. Reload the shell to apply the changes by pressing `Ctrl+Super+Alt+R`. If the changes are not reflected, restart your system to properly load image/video resolutions:
    ```bash
    systemctl reboot
    ```
