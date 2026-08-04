@@ -25,6 +25,7 @@ Searcher {
     property var propertiesCache: ({})
 
     FileView {
+        id: propsFileView
         path: `${Paths.home}/.cache/caelestia/wallpaper_properties.json`
         watchChanges: true
         printErrors: false
@@ -103,13 +104,16 @@ Searcher {
             if (!running) {
                 let oldPath = liveWallpapers.path;
                 let oldPath2 = wallpapers.path;
+                let oldPropsPath = propsFileView.path;
 
                 liveWallpapers.path = "";
                 wallpapers.path = "";
+                propsFileView.path = "";
 
                 Qt.callLater(() => {
                     liveWallpapers.path = oldPath;
                     wallpapers.path = oldPath2;
+                    propsFileView.path = oldPropsPath;
                 });
             }
         }
