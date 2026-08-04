@@ -131,14 +131,18 @@ Item {
                 loops: MediaPlayer.Infinite
 
                 property bool isCovered: {
-                    if (GameMode.enabled) return true;
-                    if (!Hypr.activeToplevel || !Hypr.activeToplevel.lastIpcObject.fullscreen) return false;
-
-                    const winClass = (Hypr.activeToplevel.lastIpcObject.class || "").toLowerCase();
-                    const browsers = ["firefox", "brave", "chromium", "chrome", "zen", "thorium", "vivaldi", "opera", "floorp", "waterfox", "librewolf", "edge"];
-                    if (browsers.some(b => winClass.includes(b))) return false;
-
-                    return true;
+                    try {
+                        if (typeof GameMode !== 'undefined' && GameMode && GameMode.enabled) return true;
+                        if (typeof Hypr !== 'undefined' && Hypr && Hypr.activeToplevel && Hypr.activeToplevel.lastIpcObject && Hypr.activeToplevel.lastIpcObject.fullscreen) {
+                            const winClass = (Hypr.activeToplevel.lastIpcObject.class || "").toLowerCase();
+                            const browsers = ["firefox", "brave", "chromium", "chrome", "zen", "thorium", "vivaldi", "opera", "floorp", "waterfox", "librewolf", "edge"];
+                            if (browsers.some(b => winClass.includes(b))) return false;
+                            return true;
+                        }
+                        return false;
+                    } catch (e) {
+                        return false;
+                    }
                 }
 
                 onIsCoveredChanged: {
@@ -165,17 +169,18 @@ Item {
                 fillMode: VideoOutput.PreserveAspectCrop
             }
 
-            Anim on opacity {
+            NumberAnimation {
                 id: animVid
-                type: Anim.SlowEffects
-                running: false
+                target: vidRoot
+                property: "opacity"
+                duration: typeof Tokens !== 'undefined' && Tokens.anim ? Tokens.anim.durations.expressiveSlowEffects : 500
                 from: 0
                 to: 1
             }
 
             Timer {
                 running: root.current !== vidRoot && root.current?.isReady
-                interval: animVid.duration
+                interval: typeof animVid !== 'undefined' ? animVid.duration : 500
                 onTriggered: {
                     player.stop()
                     vidRoot.destroy()
