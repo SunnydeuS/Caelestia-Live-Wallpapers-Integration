@@ -8,6 +8,7 @@ import qs.components.images
 import qs.services
 import qs.utils
 import QtMultimedia
+import Quickshell.Services.UPower
 
 Item {
     id: root
@@ -133,6 +134,13 @@ Item {
                 property bool isCovered: {
                     try {
                         if (typeof GameMode !== 'undefined' && GameMode && GameMode.enabled) return true;
+                        
+                        if (UPower.displayDevice && UPower.displayDevice.isPresent) {
+                            if (UPower.displayDevice.state === UPowerDeviceState.Discharging && UPower.displayDevice.percentage <= 40.0) {
+                                return true;
+                            }
+                        }
+
                         if (typeof Hypr !== 'undefined' && Hypr && Hypr.activeToplevel && Hypr.activeToplevel.lastIpcObject && Hypr.activeToplevel.lastIpcObject.fullscreen) {
                             const winClass = (Hypr.activeToplevel.lastIpcObject.class || "").toLowerCase();
                             const browsers = ["firefox", "brave", "chromium", "chrome", "zen", "thorium", "vivaldi", "opera", "floorp", "waterfox", "librewolf", "edge"];
