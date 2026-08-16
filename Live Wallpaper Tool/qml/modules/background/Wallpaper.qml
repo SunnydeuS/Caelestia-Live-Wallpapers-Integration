@@ -147,8 +147,8 @@ Item {
 
                         if (typeof GameMode !== 'undefined' && GameMode && GameMode.enabled) return true;
                         
-                        if (UPower.displayDevice && UPower.displayDevice.isPresent) {
-                            if (UPower.displayDevice.state === UPowerDeviceState.Discharging && UPower.displayDevice.percentage <= 40.0) {
+                        if (UPower.displayDevice && UPower.displayDevice.isPresent && UPower.displayDevice.isLaptopBattery) {
+                            if (UPower.displayDevice.state === UPowerDeviceState.Discharging && UPower.displayDevice.percentage <= 0.40) {
                                 return true;
                             }
                         }
