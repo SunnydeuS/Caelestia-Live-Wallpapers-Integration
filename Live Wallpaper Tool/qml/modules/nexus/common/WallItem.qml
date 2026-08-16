@@ -45,6 +45,7 @@ Item {
 
                 opacity: img.status === Image.Ready ? 0 : 1
                 active: opacity > 0
+                visible: active
 
                 sourceComponent: StyledRect {
                     implicitWidth: loadingIndicator.implicitSize + Tokens.padding.large * 2
@@ -74,6 +75,7 @@ Item {
 
                 anchors.fill: parent
                 asynchronous: true
+                cache: false
                 fillMode: Image.PreserveAspectCrop
                 sourceSize: {
                     const dpr = (QsWindow.window as QsWindow)?.devicePixelRatio ?? 1;

@@ -217,7 +217,8 @@ PageBase {
                         let path = String(modelData.path);
                         let props = Wallpapers.propertiesCache[path];
                         if (props) {
-                            let parts = props.split(", ");
+                            let str = typeof props === "string" ? props : (props.info || "");
+                            let parts = str.split(", ");
                             if (parts.length >= 2) return parts[1];
                         }
                         return path.split(".").pop().toUpperCase();
@@ -229,7 +230,8 @@ PageBase {
                         let path = String(modelData.path);
                         let props = Wallpapers.propertiesCache[path];
                         if (props) {
-                            let parts = props.split(", ");
+                            let str = typeof props === "string" ? props : (props.info || "");
+                            let parts = str.split(", ");
                             if (parts.length === 3) return parts[2];
                         }
                         return "";
@@ -241,7 +243,8 @@ PageBase {
                         let path = String(modelData.path);
                         let props = Wallpapers.propertiesCache[path];
                         if (props) {
-                            let parts = props.split(", ");
+                            let str = typeof props === "string" ? props : (props.info || "");
+                            let parts = str.split(", ");
                             return parts[0];
                         }
                         return "";

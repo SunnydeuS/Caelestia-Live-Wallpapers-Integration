@@ -1,36 +1,52 @@
 #!/usr/bin/env python3
 import os
 import sys
-import subprocess
 import json
+import subprocess
+import colorsys
+import math
+from PIL import Image
 
 HOME = os.path.expanduser("~")
 THUMBS_DIR = os.path.join(HOME, ".cache/caelestia/live_thumbs")
 JSON_CACHE = os.path.join(HOME, ".cache/caelestia/wallpaper_properties.json")
 
-# Try to get folders dynamically or use arguments if Caelestia provides them
 def get_pictures_dir():
     try:
         res = subprocess.run(["xdg-user-dir", "PICTURES"], stdout=subprocess.PIPE, text=True)
         path = res.stdout.strip()
         if path and os.path.exists(path):
             return path
-    except:
+    except Exception:
         pass
-    for fallback in ["Pictures", "Imágenes", "Images", "Bilder"]:
-        path = os.path.join(HOME, fallback)
-        if os.path.exists(path):
-            return path
+    for fallback in [os.path.join(HOME, "Pictures"), os.path.join(HOME, "Imágenes"), os.path.join(HOME, "Imagenes")]:
+        if os.path.exists(fallback):
+            return fallback
     return os.path.join(HOME, "Pictures")
 
 PICTURES_DIR = get_pictures_dir()
 
-# Arg 1: Static directory, Arg 2: Animated directory
 WALLPAPERS_DIR = sys.argv[1] if len(sys.argv) > 1 else os.path.join(PICTURES_DIR, "Wallpapers")
 LIVE_WALLPAPERS_DIR = sys.argv[2] if len(sys.argv) > 2 else os.path.join(PICTURES_DIR, "Live-Wallpapers")
 
 os.makedirs(THUMBS_DIR, exist_ok=True)
 properties = {}
+
+TARGET_CENTERS = {
+    "red":    0.0,
+    "orange": 28.0,
+    "yellow": 55.0,
+    "green":  125.0,
+    "blue":   210.0,
+    "purple": 280.0,
+    "pink":   330.0,
+}
+
+BANDWIDTH = 26.0
+
+def hue_distance(h1, h2):
+    diff = abs(h1 - h2) % 360.0
+    return min(diff, 360.0 - diff)
 
 def get_ffprobe_info(filepath):
     try:
@@ -38,29 +54,139 @@ def get_ffprobe_info(filepath):
         res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         data = json.loads(res.stdout)
         stream = data["streams"][0]
-        fps_str = stream.get("r_frame_rate", "0/1")
-        num, den = map(int, fps_str.split('/'))
-        return stream.get("width", 0), stream.get("height", 0), (round(num / den) if den != 0 else 0)
-    except:
+        w, h = stream["width"], stream["height"]
+        num, den = map(int, stream["r_frame_rate"].split('/'))
+        fps = round(num / den) if den > 0 else None
+        return w, h, fps
+    except Exception:
         return None, None, None
+
+def get_image_info(filepath):
+    try:
+        with Image.open(filepath) as img:
+            return img.size[0], img.size[1]
+    except Exception:
+        return None, None
+
+def classify_colors_high_precision(img_path):
+    try:
+        with Image.open(img_path) as img:
+            img = img.convert("RGB")
+            img_small = img.resize((96, 96), Image.Resampling.LANCZOS)
+            pixels = list(img_small.get_flattened_data() if hasattr(img_small, 'get_flattened_data') else img_small.getdata())
+            
+            total_pixels = len(pixels)
+            dark_count = 0
+            grey_count = 0
+            vibrant_count = 0
+            total_sat = 0.0
+            total_val = 0.0
+            
+            for r, g, b in pixels:
+                h, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)
+                total_sat += s
+                total_val += v
+                if v < 0.25:
+                    dark_count += 1
+                if s < 0.18:
+                    grey_count += 1
+                if s > 0.40 and v > 0.35:
+                    vibrant_count += 1
+                    
+            avg_sat = total_sat / total_pixels
+            dark_ratio = dark_count / total_pixels
+            grey_ratio = grey_count / total_pixels
+            vibrant_ratio = vibrant_count / total_pixels
+            
+            is_strictly_dark_grey = (avg_sat < 0.21) or (vibrant_ratio < 0.06 and (dark_ratio > 0.45 or grey_ratio > 0.55))
+            
+            quantized = img_small.quantize(colors=24, method=Image.Quantize.MEDIANCUT)
+            palette = quantized.getpalette()[:72]
+            counts = quantized.getcolors()
+            
+            if not counts:
+                return "grey", ["grey"]
+                
+            scores = {k: 0.0 for k in TARGET_CENTERS}
+            
+            for count, idx in counts:
+                r = palette[idx * 3]
+                g = palette[idx * 3 + 1]
+                b = palette[idx * 3 + 2]
+                
+                pixel_weight = count / total_pixels
+                h, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)
+                h_deg = h * 360.0
+                
+                if s >= 0.16 and (v >= 0.12 or s >= 0.45):
+                    vibrancy = (s ** 1.3) * (v ** 0.7)
+                    for c_name, c_hue in TARGET_CENTERS.items():
+                        dist = hue_distance(h_deg, c_hue)
+                        match = math.exp(-0.5 * (dist / BANDWIDTH) ** 2)
+                        scores[c_name] += pixel_weight * vibrancy * match
+                        
+            max_c = max(scores, key=scores.get)
+            max_score = scores[max_c]
+            
+            if is_strictly_dark_grey and max_score < 0.05:
+                return "black", ["black", "grey"]
+                
+            matched = [max_c]
+            for c_name, score in scores.items():
+                if c_name != max_c and score >= max_score * 0.35 and score > 0.02:
+                    matched.append(c_name)
+                    
+            if is_strictly_dark_grey and max_score < 0.08:
+                if "black" not in matched:
+                    matched.append("black")
+                if "grey" not in matched:
+                    matched.append("grey")
+                    
+            return max_c if max_score >= 0.03 else "black", matched
+    except Exception:
+        return "black", ["black", "grey"]
 
 def process_file(filepath, is_video):
     ext = filepath.split(".")[-1].upper()
-    w, h, fps = get_ffprobe_info(filepath)
-    if w and h:
-        properties[filepath] = f"{w}x{h}, {ext}, {fps} FPS" if is_video and fps else f"{w}x{h}, {ext}"
-    else:
-        properties[filepath] = f"{ext}"
+    info_str = ""
+    thumb_path = ""
     
     if is_video:
+        w, h, fps = get_ffprobe_info(filepath)
+        if w and h:
+            info_str = f"{w}x{h}, {ext}, {fps} FPS" if fps else f"{w}x{h}, {ext}"
+        else:
+            info_str = f"{ext}"
+            
         thumb_path = os.path.join(THUMBS_DIR, f"{os.path.basename(filepath)}.jpg")
         if not os.path.exists(thumb_path):
             print(f"Generating thumbnail for: {os.path.basename(filepath)}")
-            subprocess.run(["ffmpeg", "-i", filepath, "-ss", "00:00:00", "-vframes", "1", thumb_path, "-y", "-loglevel", "error"])
+            subprocess.run(["ffmpeg", "-ss", "00:00:02", "-i", filepath, "-an", "-vf", "scale=384:-1", "-vframes", "1", thumb_path, "-y", "-loglevel", "error"])
+            
+        analyze_path = thumb_path if os.path.exists(thumb_path) else None
+    else:
+        w, h = get_image_info(filepath)
+        if w and h:
+            info_str = f"{w}x{h}, {ext}"
+        else:
+            info_str = f"{ext}"
+        analyze_path = filepath
+        
+    primary_color, colors = ("grey", ["grey"])
+    if analyze_path and os.path.exists(analyze_path):
+        primary_color, colors = classify_colors_high_precision(analyze_path)
+        
+    properties[filepath] = {
+        "info": info_str,
+        "color": primary_color,
+        "colors": colors
+    }
 
-print("Searching for wallpapers and videos...")
-for base_dir, is_vid, exts in [(LIVE_WALLPAPERS_DIR, True, ('.mp4', '.mkv', '.webm', '.avi', '.mov')), 
-                               (WALLPAPERS_DIR, False, ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif'))]:
+print("Searching for wallpapers and analyzing high-precision colors...")
+for base_dir, is_vid, exts in [
+    (LIVE_WALLPAPERS_DIR, True, ('.mp4', '.mkv', '.webm', '.avi', '.mov')), 
+    (WALLPAPERS_DIR, False, ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif'))
+]:
     if os.path.exists(base_dir):
         for root, _, files in os.walk(base_dir):
             for f in files:
@@ -68,6 +194,6 @@ for base_dir, is_vid, exts in [(LIVE_WALLPAPERS_DIR, True, ('.mp4', '.mkv', '.we
                     process_file(os.path.join(root, f), is_vid)
 
 with open(JSON_CACHE, "w") as f:
-    json.dump(properties, f)
+    json.dump(properties, f, indent=2)
 
-print(f"Done! Found {len(properties)} wallpapers.")
+print(f"Done! Processed {len(properties)} wallpapers with high-precision dark/grey detection.")

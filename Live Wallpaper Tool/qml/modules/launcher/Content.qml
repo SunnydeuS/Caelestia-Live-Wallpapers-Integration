@@ -18,8 +18,18 @@ Item {
     readonly property int padding: Tokens.padding.large
     readonly property int rounding: Tokens.rounding.extraLarge
 
-    implicitWidth: listWrapper.width + padding * 2
-    implicitHeight: search.height + listWrapper.height + padding + search.anchors.bottomMargin + (wallpaperButtonsRow.visible ? wallpaperButtonsRow.implicitHeight + root.padding : 0)
+    implicitWidth: Math.max(listWrapper.width + padding * 2, colorFilterLoader.item && colorFilterLoader.item.visible ? colorFilterLoader.item.implicitWidth + padding * 2 : 0)
+    implicitHeight: search.height + listWrapper.height + padding + search.anchors.bottomMargin + (wallpaperButtonsRow.visible ? wallpaperButtonsRow.implicitHeight + root.padding : 0) + (colorFilterLoader.item && colorFilterLoader.item.visible ? colorFilterLoader.item.implicitHeight - Tokens.spacing.small : 0)
+
+    Loader {
+        id: colorFilterLoader
+        active: list.showWallpapers
+        asynchronous: true
+        anchors.bottom: listWrapper.top
+        anchors.bottomMargin: -18
+        anchors.horizontalCenter: parent.horizontalCenter
+        sourceComponent: ColorFilterBar {}
+    }
 
     Item {
         id: listWrapper
@@ -80,6 +90,7 @@ Item {
                 if (list.currentList && list.currentList.count > 0) {
                     let randomIndex = Math.floor(Math.random() * list.currentList.count);
                     list.currentList.currentIndex = randomIndex;
+                    list.currentList.positionViewAtIndex(randomIndex, PathView.SnapPosition);
                 } else {
                     Wallpapers.setRandom();
                 }
@@ -189,8 +200,10 @@ Item {
 
         Connections {
             function onLauncherChanged(): void {
-                if (!root.screenState.launcher)
+                if (!root.screenState.launcher) {
                     search.text = "";
+                    Wallpapers.colorFilter = "";
+                }
             }
 
             function onSessionChanged(): void {

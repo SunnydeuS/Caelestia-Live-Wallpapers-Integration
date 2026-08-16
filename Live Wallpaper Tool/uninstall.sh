@@ -30,6 +30,11 @@ for file in "${FILES[@]}"; do
     fi
 done
 
+if [ -f "/etc/xdg/quickshell/caelestia/modules/launcher/ColorFilterBar.qml" ]; then
+    rm -f "/etc/xdg/quickshell/caelestia/modules/launcher/ColorFilterBar.qml"
+    echo "Removed ColorFilterBar.qml"
+fi
+
 echo "-> Searching for Caelestia Python module path..."
 PYTHON_FILE=$(find /usr/lib/python3.*/site-packages/caelestia/utils/wallpaper.py 2>/dev/null | head -n 1)
 

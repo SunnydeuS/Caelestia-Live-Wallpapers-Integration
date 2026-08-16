@@ -73,11 +73,26 @@ Searcher {
     }
 
     function preview(path: string): void {
+        if (!path) {
+            stopPreview();
+            return;
+        }
+        if (showPreview && previewPath === path)
+            return;
+
         previewPath = path;
         showPreview = true;
 
-        if (Colours.scheme === "dynamic")
-            getPreviewColoursProc.running = true;
+        if (Colours.scheme === "dynamic") {
+            if (getPreviewColoursProc.running) {
+                getPreviewColoursProc.running = false;
+            }
+            Qt.callLater(() => {
+                if (showPreview && previewPath === path && Colours.scheme === "dynamic") {
+                    getPreviewColoursProc.running = true;
+                }
+            });
+        }
     }
 
     function stopPreview(): void {
@@ -120,20 +135,42 @@ Searcher {
     }
 
     property int filterMode: 0 // Default to Static
+    property string colorFilter: "" // "", "red", "orange", "yellow", "green", "blue", "purple", "pink", "grey", "black"
+
+    function matchesColor(path: string, filter: string): bool {
+        if (!filter || filter === "" || filter === "all")
+            return true;
+        let cleanPath = String(path).replace(/^file:\/\//, "");
+        let entry = propertiesCache[cleanPath] || propertiesCache[path];
+        if (!entry || typeof entry === "string")
+            return false;
+        if (entry.color === filter)
+            return true;
+        if (entry.colors && Array.isArray(entry.colors)) {
+            if (entry.colors.includes(filter)) return true;
+        }
+        return false;
+    }
 
     property var allEntries: {
         let arr = [];
         if (filterMode === 0 || filterMode === 2) {
             if (wallpapers.entries) {
                 for (let i = 0; i < wallpapers.entries.length; i++) {
-                    arr.push(wallpapers.entries[i]);
+                    let entry = wallpapers.entries[i];
+                    if (matchesColor(entry.path, colorFilter)) {
+                        arr.push(entry);
+                    }
                 }
             }
         }
         if (filterMode === 1 || filterMode === 2) {
             if (liveWallpapers.entries) {
                 for (let i = 0; i < liveWallpapers.entries.length; i++) {
-                    arr.push(liveWallpapers.entries[i]);
+                    let entry = liveWallpapers.entries[i];
+                    if (matchesColor(entry.path, colorFilter)) {
+                        arr.push(entry);
+                    }
                 }
             }
         }

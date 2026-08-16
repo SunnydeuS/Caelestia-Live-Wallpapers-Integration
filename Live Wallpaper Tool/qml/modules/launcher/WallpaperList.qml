@@ -48,27 +48,59 @@ PathView {
         id: scriptModel
 
         readonly property string search: root.search.text.split(" ").slice(1).join(" ")
+        readonly property string colorFilter: Wallpapers.colorFilter
+        readonly property int filterMode: Wallpapers.filterMode
+        readonly property var allWallpapers: Wallpapers.list
 
-        values: Wallpapers.query(search)
-        onValuesChanged: root.currentIndex = search ? 0 : values.findIndex(w => w.path === Wallpapers.actualCurrent)
+        values: {
+            const _cf = colorFilter;
+            const _fm = filterMode;
+            const _list = allWallpapers;
+            return Wallpapers.query(search);
+        }
+        onValuesChanged: {
+            if (values.length === 0) {
+                previewDebounce.stop();
+                Wallpapers.stopPreview();
+            } else {
+                let targetIdx = (search || colorFilter || filterMode !== 0) ? 0 : Math.max(0, values.findIndex(w => w.path === Wallpapers.actualCurrent));
+                root.currentIndex = targetIdx;
+                Qt.callLater(() => {
+                    root.positionViewAtIndex(targetIdx, PathView.SnapPosition);
+                });
+            }
+        }
     }
 
-    Component.onCompleted: currentIndex = Wallpapers.list.findIndex(w => w.path === Wallpapers.actualCurrent)
+    Component.onCompleted: {
+        let idx = Math.max(0, Wallpapers.list.findIndex(w => w.path === Wallpapers.actualCurrent));
+        currentIndex = idx;
+        Qt.callLater(() => {
+            positionViewAtIndex(idx, PathView.SnapPosition);
+        });
+    }
     Component.onDestruction: Wallpapers.stopPreview()
 
     Timer {
         id: previewDebounce
-        interval: 300
+        interval: 220
         property string pendingPath: ""
         onTriggered: {
-            Wallpapers.preview(pendingPath);
+            if (pendingPath && root.count > 0) {
+                Wallpapers.preview(pendingPath);
+            } else {
+                Wallpapers.stopPreview();
+            }
         }
     }
 
     onCurrentItemChanged: {
         if (currentItem) {
-            previewDebounce.pendingPath = (currentItem as WallpaperItem).modelData.path;
-            previewDebounce.restart();
+            let item = currentItem as WallpaperItem;
+            if (item && item.modelData && item.modelData.path) {
+                previewDebounce.pendingPath = item.modelData.path;
+                previewDebounce.restart();
+            }
         }
     }
 

@@ -23,7 +23,8 @@ Item {
         let path = String(root.modelData.path);
         let props = Wallpapers.propertiesCache[path];
         if (props) {
-            let parts = props.split(", ");
+            let str = typeof props === "string" ? props : (props.info || "");
+            let parts = str.split(", ");
             if (parts.length >= 2) return parts[1].trim();
         }
         return path.split(".").pop().toUpperCase();
@@ -32,7 +33,8 @@ Item {
         let path = String(root.modelData.path);
         let props = Wallpapers.propertiesCache[path];
         if (props) {
-            let parts = props.split(", ");
+            let str = typeof props === "string" ? props : (props.info || "");
+            let parts = str.split(", ");
             if (parts.length === 3) return parts[2].trim();
         }
         return "";
@@ -41,7 +43,8 @@ Item {
         let path = String(root.modelData.path);
         let props = Wallpapers.propertiesCache[path];
         if (props) {
-            let parts = props.split(", ");
+            let str = typeof props === "string" ? props : (props.info || "");
+            let parts = str.split(", ");
             return parts[0].trim();
         }
         let fileName = path.split("/").pop();
@@ -59,6 +62,8 @@ Item {
     StateLayer {
         radius: Tokens.rounding.large
         onClicked: {
+            if (Colours.scheme === "dynamic" && root.modelData.path !== Wallpapers.actualCurrent)
+                Wallpapers.previewColourLock = true;
             Wallpapers.setWallpaper(root.modelData.path);
             root.screenState.launcher = false;
         }
@@ -67,6 +72,7 @@ Item {
     Elevation {
         anchors.fill: image
         radius: image.radius
+        visible: opacity > 0
         opacity: root.PathView.isCurrentItem ? 1 : 0
         level: 4
 
@@ -95,55 +101,22 @@ Item {
             fontStyle: Tokens.font.icon.builders.extraLarge.scale(2).weight(Font.DemiBold).build()
         }
 
-        Loader {
+        CachingImage {
             anchors.fill: parent
-            sourceComponent: {
+            path: {
                 let pathStr = String(root.modelData.path);
-                if (pathStr && pathStr.match(/\.(mp4|mkv|webm|avi|mov)$/i))
-                    return vidComp;
-                return imgComp;
-            }
-        }
-
-        Component {
-            id: imgComp
-            CachingImage {
-                anchors.fill: parent
-                path: root.modelData.path
-                smooth: !root.PathView.view.moving
-                sourceSize: {
-                    const dpr = (QsWindow.window as QsWindow)?.devicePixelRatio ?? 1;
-                    return Qt.size(image.implicitWidth * dpr, image.implicitHeight * dpr);
+                if (pathStr && pathStr.match(/\.(mp4|mkv|webm|avi|mov)$/i)) {
+                    let parts = pathStr.split("/");
+                    let homeDir = "/" + parts[1] + "/" + parts[2];
+                    let fileName = parts[parts.length - 1];
+                    return homeDir + "/.cache/caelestia/live_thumbs/" + fileName + ".jpg";
                 }
+                return pathStr || "";
             }
-        }
-
-        Component {
-            id: vidComp
-            Item {
-                anchors.fill: parent
-
-                CachingImage {
-                    id: thumb
-                    anchors.fill: parent
-                    
-                    path: {
-                        let pathStr = String(root.modelData.path);
-                        if (!pathStr.match(/\.(mp4|mkv|webm|avi|mov)$/i))
-                            return pathStr;
-                            
-                        let parts = pathStr.split("/");
-                        let homeDir = "/" + parts[1] + "/" + parts[2];
-                        let fileName = parts[parts.length - 1];
-                        return homeDir + "/.cache/caelestia/live_thumbs/" + fileName + ".jpg";
-                    }
-                    
-                    smooth: !root.PathView.view.moving
-                    sourceSize: {
-                        const dpr = (QsWindow.window as QsWindow)?.devicePixelRatio ?? 1;
-                        return Qt.size(image.implicitWidth * dpr, image.implicitHeight * dpr);
-                    }
-                }
+            smooth: !root.PathView.view.moving
+            sourceSize: {
+                const dpr = (QsWindow.window as QsWindow)?.devicePixelRatio ?? 1;
+                return Qt.size(image.implicitWidth * dpr, image.implicitHeight * dpr);
             }
         }
 

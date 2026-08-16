@@ -34,19 +34,22 @@ Item {
     }
 
     Component.onCompleted: {
-        if (source)
+        completed = true;
+        if (!current && source) {
             Qt.callLater(() => {
-                if (source.match(/\.(mp4|mkv|webm|avi|mov)$/i)) {
-                    current = videoComp.createObject(this, {
-                        path: source
-                    });
-                } else {
-                    current = imgComp.createObject(this, {
-                        path: source
-                    });
+                if (!current && source) {
+                    if (source.match(/\.(mp4|mkv|webm|avi|mov)$/i)) {
+                        current = videoComp.createObject(this, {
+                            path: source
+                        });
+                    } else {
+                        current = imgComp.createObject(this, {
+                            path: source
+                        });
+                    }
                 }
-                completed = true;
             });
+        }
     }
 
     Loader {
@@ -121,18 +124,27 @@ Item {
         Item {
             id: vidRoot
             property string path
-            property bool isReady: player.playbackState === MediaPlayer.PlayingState
+            property bool isReady: player.mediaStatus === MediaPlayer.LoadedMedia || player.mediaStatus === MediaPlayer.BufferedMedia || player.mediaStatus === MediaPlayer.BufferingMedia || player.playbackState === MediaPlayer.PlayingState || player.playbackState === MediaPlayer.PausedState
             anchors.fill: parent
             opacity: 0
+
+            onIsReadyChanged: {
+                if (isReady && opacity === 0) {
+                    animVid.start();
+                }
+            }
 
             MediaPlayer {
                 id: player
                 source: vidRoot.path ? "file://" + vidRoot.path : ""
                 videoOutput: videoOutput
+                audioOutput: null
                 loops: MediaPlayer.Infinite
 
                 property bool isCovered: {
                     try {
+                        if (Wallpapers.showPreview) return false;
+
                         if (typeof GameMode !== 'undefined' && GameMode && GameMode.enabled) return true;
                         
                         if (UPower.displayDevice && UPower.displayDevice.isPresent) {
@@ -161,11 +173,32 @@ Item {
                     }
                 }
 
+                onErrorOccurred: (error, errorString) => {
+                    if (error !== MediaPlayer.NoError && vidRoot.path) {
+                        let p = vidRoot.path;
+                        vidRoot.path = "";
+                        Qt.callLater(() => {
+                            vidRoot.path = p;
+                            if (!player.isCovered) player.play();
+                        });
+                    }
+                }
+
                 Component.onCompleted: {
-                    if (!isCovered) play();
+                    play();
+                    if (isCovered) {
+                        Qt.callLater(() => {
+                            if (isCovered) pause();
+                        });
+                    }
                 }
                 onPlaybackStateChanged: {
                     if (playbackState === MediaPlayer.PlayingState) {
+                        animVid.start();
+                    }
+                }
+                onMediaStatusChanged: {
+                    if (mediaStatus === MediaPlayer.LoadedMedia || mediaStatus === MediaPlayer.BufferedMedia) {
                         animVid.start();
                     }
                 }
@@ -190,8 +223,9 @@ Item {
                 running: root.current !== vidRoot && root.current?.isReady
                 interval: typeof animVid !== 'undefined' ? animVid.duration : 500
                 onTriggered: {
-                    player.stop()
-                    vidRoot.destroy()
+                    player.stop();
+                    player.source = "";
+                    vidRoot.destroy();
                 }
             }
         }
@@ -206,7 +240,6 @@ Item {
             property bool isReady: status === Image.Ready
 
             anchors.fill: parent
-
             opacity: 0
 
             onStatusChanged: {
@@ -225,8 +258,11 @@ Item {
 
             Timer {
                 running: root.current !== img && root.current?.isReady
-                interval: anim.duration
-                onTriggered: img.destroy()
+                interval: anim.duration || 500
+                onTriggered: {
+                    img.source = "";
+                    img.destroy();
+                }
             }
         }
     }
