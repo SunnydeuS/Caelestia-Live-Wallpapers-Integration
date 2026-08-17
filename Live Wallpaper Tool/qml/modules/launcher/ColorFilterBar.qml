@@ -20,6 +20,7 @@ StyledRect {
         { id: "blue", name: qsTr("Blue"), hex: "#2196F3" },
         { id: "purple", name: qsTr("Purple"), hex: "#9C27B0" },
         { id: "pink", name: qsTr("Pink"), hex: "#EC407A" },
+        { id: "white", name: qsTr("White"), hex: "#FFFFFF" },
         { id: "black", name: qsTr("Black"), hex: "#1A1A1A" }
     ]
 
@@ -132,7 +133,7 @@ StyledRect {
                         color: pillWrapper.modelData.hex
                         scale: pillWrapper.isHovered ? 1.15 : (pillWrapper.isSelected ? 1.08 : 1.0)
 
-                        border.width: pillWrapper.isSelected ? 2 : (pillWrapper.modelData.id === "black" ? 1 : 0)
+                        border.width: pillWrapper.isSelected ? 2 : (pillWrapper.modelData.id === "black" || pillWrapper.modelData.id === "white" ? 1 : 0)
                         border.color: pillWrapper.isSelected ? Colours.palette.m3onSurface : Colours.palette.m3outlineVariant
 
                         Behavior on scale {

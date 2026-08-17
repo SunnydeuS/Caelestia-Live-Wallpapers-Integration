@@ -77,6 +77,7 @@ def classify_colors_high_precision(img_path):
             
             total_pixels = len(pixels)
             dark_count = 0
+            light_count = 0
             grey_count = 0
             vibrant_count = 0
             total_sat = 0.0
@@ -88,24 +89,29 @@ def classify_colors_high_precision(img_path):
                 total_val += v
                 if v < 0.25:
                     dark_count += 1
+                elif v > 0.78 and s < 0.22:
+                    light_count += 1
                 if s < 0.18:
                     grey_count += 1
                 if s > 0.40 and v > 0.35:
                     vibrant_count += 1
                     
             avg_sat = total_sat / total_pixels
+            avg_val = total_val / total_pixels
             dark_ratio = dark_count / total_pixels
+            light_ratio = light_count / total_pixels
             grey_ratio = grey_count / total_pixels
             vibrant_ratio = vibrant_count / total_pixels
             
-            is_strictly_dark_grey = (avg_sat < 0.21) or (vibrant_ratio < 0.06 and (dark_ratio > 0.45 or grey_ratio > 0.55))
+            is_strictly_white = (avg_sat < 0.22 and avg_val > 0.65) or (vibrant_ratio < 0.06 and light_ratio > 0.40)
+            is_strictly_dark_grey = (avg_sat < 0.21 and avg_val < 0.50) or (vibrant_ratio < 0.06 and (dark_ratio > 0.45 or (grey_ratio > 0.55 and avg_val < 0.50)))
             
             quantized = img_small.quantize(colors=24, method=Image.Quantize.MEDIANCUT)
             palette = quantized.getpalette()[:72]
             counts = quantized.getcolors()
             
             if not counts:
-                return "grey", ["grey"]
+                return ("white", ["white", "grey"]) if is_strictly_white else ("black", ["black", "grey"])
                 
             scores = {k: 0.0 for k in TARGET_CENTERS}
             
@@ -128,6 +134,9 @@ def classify_colors_high_precision(img_path):
             max_c = max(scores, key=scores.get)
             max_score = scores[max_c]
             
+            if is_strictly_white and max_score < 0.05:
+                return "white", ["white", "grey"]
+
             if is_strictly_dark_grey and max_score < 0.05:
                 return "black", ["black", "grey"]
                 
@@ -136,13 +145,30 @@ def classify_colors_high_precision(img_path):
                 if c_name != max_c and score >= max_score * 0.35 and score > 0.02:
                     matched.append(c_name)
                     
+            if is_strictly_white and max_score < 0.08:
+                if "white" not in matched:
+                    matched.append("white")
+                if "grey" not in matched:
+                    matched.append("grey")
+
             if is_strictly_dark_grey and max_score < 0.08:
                 if "black" not in matched:
                     matched.append("black")
                 if "grey" not in matched:
                     matched.append("grey")
+
+            if light_ratio > 0.35 and "white" not in matched and (avg_sat < 0.35 or vibrant_ratio < 0.15):
+                matched.append("white")
+
+            if dark_ratio > 0.35 and "black" not in matched and (avg_sat < 0.35 or vibrant_ratio < 0.15):
+                matched.append("black")
                     
-            return max_c if max_score >= 0.03 else "black", matched
+            if max_score >= 0.03:
+                return max_c, matched
+            elif is_strictly_white:
+                return "white", matched
+            else:
+                return "black", matched
     except Exception:
         return "black", ["black", "grey"]
 

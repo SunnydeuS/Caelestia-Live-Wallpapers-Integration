@@ -135,7 +135,7 @@ Searcher {
     }
 
     property int filterMode: 0 // Default to Static
-    property string colorFilter: "" // "", "red", "orange", "yellow", "green", "blue", "purple", "pink", "grey", "black"
+    property string colorFilter: "" // "", "red", "orange", "yellow", "green", "blue", "purple", "pink", "white", "black"
 
     function matchesColor(path: string, filter: string): bool {
         if (!filter || filter === "" || filter === "all")

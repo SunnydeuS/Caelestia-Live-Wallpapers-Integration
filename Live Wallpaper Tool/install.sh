@@ -5,7 +5,41 @@ echo "Installing Caelestia Live Wallpapers..."
 # Check for sudo permissions to copy system files
 if [ "$EUID" -ne 0 ]; then
   echo "Please run the script with sudo in order to modify QML and Python files."
-  exit
+  exit 1
+fi
+
+echo "-> Checking dependencies..."
+REQUIRED_PKGS=("qt6-multimedia" "qt6-multimedia-ffmpeg" "ffmpeg" "xdg-user-dirs")
+MISSING_PKGS=()
+
+if command -v pacman &>/dev/null; then
+    for pkg in "${REQUIRED_PKGS[@]}"; do
+        if ! pacman -Qi "$pkg" &>/dev/null; then
+            MISSING_PKGS+=("$pkg")
+        fi
+    done
+
+    if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
+        echo "Missing required packages: ${MISSING_PKGS[*]}"
+        read -rp "Would you like to install missing dependencies now with pacman? [Y/n] " answer
+        answer=${answer:-Y}
+        if [[ "$answer" =~ ^[Yy]$ ]]; then
+            pacman -S --needed "${MISSING_PKGS[@]}" || {
+                echo "Error: Failed to install dependencies. Please install them manually: sudo pacman -S ${MISSING_PKGS[*]}"
+                exit 1
+            }
+        else
+            echo "Error: Required dependencies are not installed. Aborting installation."
+            exit 1
+        fi
+    else
+        echo "All dependencies satisfied."
+    fi
+else
+    # Fallback check for non-pacman distros
+    if ! command -v ffmpeg &>/dev/null || ! command -v xdg-user-dir &>/dev/null; then
+        echo "Warning: ffmpeg or xdg-user-dirs not found in PATH."
+    fi
 fi
 
 # The real user running sudo (to copy scripts to ~/.local/bin)
