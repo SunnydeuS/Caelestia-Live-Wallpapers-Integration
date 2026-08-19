@@ -21,6 +21,39 @@ Item {
     implicitWidth: Math.max(listWrapper.width + padding * 2, colorFilterLoader.item && colorFilterLoader.item.visible ? colorFilterLoader.item.implicitWidth + padding * 2 : 0)
     implicitHeight: search.height + listWrapper.height + padding + search.anchors.bottomMargin + (wallpaperButtonsRow.visible ? wallpaperButtonsRow.implicitHeight + root.padding : 0) + (colorFilterLoader.item && colorFilterLoader.item.visible ? colorFilterLoader.item.implicitHeight - Tokens.spacing.small : 0)
 
+    property real lastRandomTime: 0
+
+    function selectRandomWallpaper(): void {
+        const now = Date.now();
+        if (now - lastRandomTime < 80)
+            return;
+        lastRandomTime = now;
+
+        if (list.currentList && list.currentList.count > 0) {
+            let count = list.currentList.count;
+            let current = list.currentList.currentIndex;
+            let randomIndex = current;
+            if (count > 1) {
+                while (randomIndex === current) {
+                    randomIndex = Math.floor(Math.random() * count);
+                }
+            }
+            list.currentList.currentIndex = randomIndex;
+            list.currentList.positionViewAtIndex(randomIndex, PathView.SnapPosition);
+        } else {
+            Wallpapers.setRandom();
+        }
+    }
+
+    function triggerRefresh(): void {
+        if (refreshBtn.isLoading)
+            return;
+        refreshBtn.isLoading = true;
+        refreshBtn.dotPhase = 0;
+        Wallpapers.refreshWallpapers();
+        finishTimer.start();
+    }
+
     Loader {
         id: colorFilterLoader
         active: list.showWallpapers
@@ -86,15 +119,7 @@ Item {
         IconTextButton {
             icon: "shuffle"
             text: qsTr("Random")
-            onClicked: {
-                if (list.currentList && list.currentList.count > 0) {
-                    let randomIndex = Math.floor(Math.random() * list.currentList.count);
-                    list.currentList.currentIndex = randomIndex;
-                    list.currentList.positionViewAtIndex(randomIndex, PathView.SnapPosition);
-                } else {
-                    Wallpapers.setRandom();
-                }
-            }
+            onClicked: root.selectRandomWallpaper()
         }
         IconTextButton {
             id: refreshBtn
@@ -124,13 +149,7 @@ Item {
                 onTriggered: refreshBtn.isLoading = false
             }
 
-            onClicked: {
-                if (isLoading) return;
-                isLoading = true;
-                dotPhase = 0;
-                Wallpapers.refreshWallpapers();
-                finishTimer.start();
-            }
+            onClicked: root.triggerRefresh()
         }
     }
 
@@ -173,9 +192,59 @@ Item {
         Keys.onUpPressed: list.currentList?.decrementCurrentIndex()
         Keys.onDownPressed: list.currentList?.incrementCurrentIndex()
 
+        Keys.onLeftPressed: event => {
+            if (list.showWallpapers) {
+                Wallpapers.cycleFilterMode(true);
+                event.accepted = true;
+            }
+        }
+
+        Keys.onRightPressed: event => {
+            if (list.showWallpapers) {
+                Wallpapers.cycleFilterMode(false);
+                event.accepted = true;
+            }
+        }
+
         Keys.onEscapePressed: root.screenState.launcher = false
 
+        Keys.onBacktabPressed: event => {
+            if (list.showWallpapers) {
+                Wallpapers.cycleColorFilter(false);
+                event.accepted = true;
+            } else if (GlobalConfig.launcher.vimKeybinds) {
+                list.currentList?.decrementCurrentIndex();
+                event.accepted = true;
+            }
+        }
+
+        Keys.onTabPressed: event => {
+            if (list.showWallpapers) {
+                if (event.modifiers & Qt.ShiftModifier) {
+                    Wallpapers.cycleColorFilter(false);
+                } else {
+                    root.selectRandomWallpaper();
+                }
+                event.accepted = true;
+            } else if (GlobalConfig.launcher.vimKeybinds) {
+                if (event.modifiers & Qt.ShiftModifier) {
+                    list.currentList?.decrementCurrentIndex();
+                } else {
+                    list.currentList?.incrementCurrentIndex();
+                }
+                event.accepted = true;
+            }
+        }
+
         Keys.onPressed: event => {
+            if (list.showWallpapers) {
+                if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_R) {
+                    root.triggerRefresh();
+                    event.accepted = true;
+                    return;
+                }
+            }
+
             if (!GlobalConfig.launcher.vimKeybinds)
                 return;
 
@@ -187,12 +256,6 @@ Item {
                     list.currentList?.decrementCurrentIndex();
                     event.accepted = true;
                 }
-            } else if (event.key === Qt.Key_Tab) {
-                list.currentList?.incrementCurrentIndex();
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Backtab || (event.key === Qt.Key_Tab && (event.modifiers & Qt.ShiftModifier))) {
-                list.currentList?.decrementCurrentIndex();
-                event.accepted = true;
             }
         }
 

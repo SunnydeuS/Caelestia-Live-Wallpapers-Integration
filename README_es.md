@@ -17,6 +17,15 @@ Este script de instalación asume el uso de rutas estándar de Linux y permisos 
 - **Generación Automática de Miniaturas**: Genera automáticamente miniaturas `.jpg` de los videos.
 - **Integración en Ajustes (Nexus)**: El menú de configuración carga y muestra correctamente la categoría de fondos animados.
 
+## Atajos
+
+Al usar el carrusel (`>wallpaper`):
+
+- **`Tab`**: Selecciona un fondo aleatorio.
+- **`Shift + Tab`** / **`Backtab`**: Cicla entre los filtros de colores.
+- **`Flecha Izquierda` / `Flecha Derecha`**: Cambia la vista entre fondos *Estáticos*, *Animados* y *Todos*.
+- **`Ctrl + R`**: Recarga la lista de fondos y actualiza las miniaturas.
+
 ## Cómo funciona
 
 1. Reemplaza el componente `Image` por defecto con un elemento `MediaPlayer` en el módulo de fondo de Caelestia.

@@ -21,6 +21,15 @@ This installation script relies on standard Linux filesystem paths and write-acc
 - **Auto-Thumbnail Generation**: Automatically generates `.jpg` thumbnails for the videos.
 - **Settings Integration (Nexus)**: The settings menu correctly fetches and displays the live wallpaper category.
 
+## Shortcuts
+
+When using the carousel (`>wallpaper`):
+
+- **`Tab`**: Selects a random wallpaper.
+- **`Shift + Tab`** / **`Backtab`**: Cycles through color filters.
+- **`Left` / `Right` Arrow**: Switches view between *Static*, *Live*, and *All* wallpapers.
+- **`Ctrl + R`**: Refreshes the wallpaper list and regenerates thumbnails.
+
 ## How it works
 
 1. It replaces the default `Image` component with a `MediaPlayer` element in Caelestia's background module.

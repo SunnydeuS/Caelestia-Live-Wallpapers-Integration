@@ -137,6 +137,32 @@ Searcher {
     property int filterMode: 0 // Default to Static
     property string colorFilter: "" // "", "red", "orange", "yellow", "green", "blue", "purple", "pink", "white", "black"
 
+    function cycleFilterMode(reverse = false): void {
+        const order = [2, 0, 1]; // 2: All, 0: Static, 1: Live
+        let idx = order.indexOf(filterMode);
+        if (idx === -1)
+            idx = 0;
+        if (reverse) {
+            idx = (idx - 1 + order.length) % order.length;
+        } else {
+            idx = (idx + 1) % order.length;
+        }
+        filterMode = order[idx];
+    }
+
+    function cycleColorFilter(reverse = false): void {
+        const colors = ["", "red", "orange", "yellow", "green", "blue", "purple", "pink", "white", "black"];
+        let idx = colors.indexOf(colorFilter);
+        if (idx === -1)
+            idx = 0;
+        if (reverse) {
+            idx = (idx - 1 + colors.length) % colors.length;
+        } else {
+            idx = (idx + 1) % colors.length;
+        }
+        colorFilter = colors[idx];
+    }
+
     function matchesColor(path: string, filter: string): bool {
         if (!filter || filter === "" || filter === "all")
             return true;
