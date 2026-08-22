@@ -24,6 +24,49 @@ Searcher {
 
     property var propertiesCache: ({})
 
+    // Live Wallpaper Settings
+    property bool behaviorEnabled: true
+    property bool batteryLimitEnabled: true
+    property int batteryLimit: 40
+    property bool pauseOnFullscreen: true
+    property bool pauseOnGameMode: true
+    property bool settingsLoaded: false
+
+    FileView {
+        id: liveSettingsView
+        path: `${Paths.config}/Wallpaper_Settings.json`
+        watchChanges: true
+        printErrors: false
+        onLoaded: {
+            try {
+                const data = JSON.parse(text().trim());
+                if (data.behaviorEnabled !== undefined) root.behaviorEnabled = data.behaviorEnabled;
+                if (data.batteryLimitEnabled !== undefined) root.batteryLimitEnabled = data.batteryLimitEnabled;
+                if (data.batteryLimit !== undefined) root.batteryLimit = data.batteryLimit;
+                if (data.pauseOnFullscreen !== undefined) root.pauseOnFullscreen = data.pauseOnFullscreen;
+                if (data.pauseOnGameMode !== undefined) root.pauseOnGameMode = data.pauseOnGameMode;
+            } catch(e) {}
+            root.settingsLoaded = true;
+        }
+        onLoadFailed: err => {
+            root.settingsLoaded = true;
+            if (err === FileViewError.FileNotFound) {
+                Qt.callLater(() => root.saveSettings());
+            }
+        }
+    }
+
+    function saveSettings(): void {
+        let data = {
+            behaviorEnabled: root.behaviorEnabled,
+            batteryLimitEnabled: root.batteryLimitEnabled,
+            batteryLimit: root.batteryLimit,
+            pauseOnFullscreen: root.pauseOnFullscreen,
+            pauseOnGameMode: root.pauseOnGameMode
+        };
+        liveSettingsView.setText(JSON.stringify(data, null, 4));
+    }
+
     FileView {
         id: propsFileView
         path: `${Paths.home}/.cache/caelestia/wallpaper_properties.json`

@@ -70,6 +70,8 @@ backup_if_exists /etc/xdg/quickshell/caelestia/modules/nexus/pages/wallandstyle/
 backup_if_exists /etc/xdg/quickshell/caelestia/modules/nexus/pages/wallandstyle/WallpaperCategory.qml
 backup_if_exists /etc/xdg/quickshell/caelestia/modules/nexus/pages/WallpaperAndStyle.qml
 backup_if_exists /etc/xdg/quickshell/caelestia/modules/nexus/common/WallItem.qml
+backup_if_exists /etc/xdg/quickshell/caelestia/modules/nexus/PageCompRegistry.qml
+backup_if_exists /etc/xdg/quickshell/caelestia/modules/nexus/WindowFactory.qml
 backup_if_exists "$PYTHON_FILE"
 
 echo "-> Copying modified QML files..."

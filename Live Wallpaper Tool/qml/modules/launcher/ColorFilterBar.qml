@@ -8,6 +8,7 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.services
+import qs.modules.nexus
 
 StyledRect {
     id: root
@@ -155,6 +156,44 @@ StyledRect {
                             }
                         }
                     }
+                }
+            }
+        }
+
+        // Subtle vertical separator
+        Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            width: 1
+            height: 18
+            color: Colours.palette.m3outlineVariant
+        }
+
+        // Settings gear button (Tuerquita)
+        StyledRect {
+            id: settingsBtn
+            anchors.verticalCenter: parent.verticalCenter
+            implicitWidth: 26
+            implicitHeight: 26
+            radius: Tokens.rounding.full
+            color: settingsState.containsMouse ? Colours.palette.m3secondaryContainer : "transparent"
+
+            MaterialIcon {
+                anchors.centerIn: parent
+                text: "settings"
+                fontStyle: Tokens.font.icon.small
+                color: settingsState.containsMouse ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+            }
+
+            StateLayer {
+                id: settingsState
+                radius: parent.radius
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    try {
+                        const ss = ShellState.forActive();
+                        if (ss) ss.launcher = false;
+                    } catch(e) {}
+                    WindowFactory.openWallpaperSettings();
                 }
             }
         }

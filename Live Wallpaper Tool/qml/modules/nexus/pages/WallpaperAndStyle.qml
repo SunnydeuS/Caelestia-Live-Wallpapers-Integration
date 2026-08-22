@@ -177,6 +177,19 @@ PageBase {
                 verticalPadding: Tokens.padding.medium
                 onClicked: root.nState.openSubPage(3) // Colours page
             }
+
+            IconTextButton {
+                icon: "tune"
+                text: qsTr("Settings")
+                font: Tokens.font.body.large
+                isRound: true
+                shapeMorph: true
+                type: IconTextButton.Tonal
+                horizontalPadding: Tokens.padding.extraLarge
+                verticalPadding: Tokens.padding.medium
+                disabled: !Config.background.wallpaperEnabled
+                onClicked: root.nState.openSubPage(4) // Settings page
+            }
         }
 
         ToggleRow {
@@ -198,10 +211,22 @@ PageBase {
         ToggleRow {
             Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
 
-            last: true
             text: qsTr("Dark theme")
             checked: !Colours.light
             onToggled: Colours.setMode(checked ? "dark" : "light")
+        }
+
+        ToggleRow {
+            Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+
+            last: true
+            text: qsTr("Wallpaper behavior")
+            subtext: qsTr("Smart pause, battery limits and performance rules")
+            checked: Wallpapers.behaviorEnabled
+            onToggled: {
+                Wallpapers.behaviorEnabled = checked;
+                Wallpapers.saveSettings();
+            }
         }
     }
 }

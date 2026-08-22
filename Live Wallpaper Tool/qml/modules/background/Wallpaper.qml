@@ -145,15 +145,18 @@ Item {
                     try {
                         if (Wallpapers.showPreview) return false;
 
-                        if (typeof GameMode !== 'undefined' && GameMode && GameMode.enabled) return true;
+                        // Master switch: if behavior is disabled, don't auto-pause
+                        if (!Wallpapers.behaviorEnabled) return false;
+
+                        if (Wallpapers.pauseOnGameMode && typeof GameMode !== 'undefined' && GameMode && GameMode.enabled) return true;
                         
-                        if (UPower.displayDevice && UPower.displayDevice.isPresent && UPower.displayDevice.isLaptopBattery) {
-                            if (UPower.displayDevice.state === UPowerDeviceState.Discharging && UPower.displayDevice.percentage <= 0.40) {
+                        if (Wallpapers.batteryLimitEnabled && Wallpapers.batteryLimit > 0 && UPower.displayDevice && UPower.displayDevice.isPresent && UPower.displayDevice.isLaptopBattery) {
+                            if (UPower.displayDevice.state === UPowerDeviceState.Discharging && (UPower.displayDevice.percentage * 100) <= Wallpapers.batteryLimit) {
                                 return true;
                             }
                         }
 
-                        if (typeof Hypr !== 'undefined' && Hypr && Hypr.activeToplevel && Hypr.activeToplevel.lastIpcObject && Hypr.activeToplevel.lastIpcObject.fullscreen) {
+                        if (Wallpapers.pauseOnFullscreen && typeof Hypr !== 'undefined' && Hypr && Hypr.activeToplevel && Hypr.activeToplevel.lastIpcObject && Hypr.activeToplevel.lastIpcObject.fullscreen) {
                             const winClass = (Hypr.activeToplevel.lastIpcObject.class || "").toLowerCase();
                             const browsers = ["firefox", "brave", "chromium", "chrome", "zen", "thorium", "vivaldi", "opera", "floorp", "waterfox", "librewolf", "edge"];
                             if (browsers.some(b => winClass.includes(b))) return false;

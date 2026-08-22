@@ -21,6 +21,8 @@ FILES=(
     "modules/nexus/pages/wallandstyle/WallpaperCategory.qml"
     "modules/nexus/pages/WallpaperAndStyle.qml"
     "modules/nexus/common/WallItem.qml"
+    "modules/nexus/PageCompRegistry.qml"
+    "modules/nexus/WindowFactory.qml"
 )
 
 for file in "${FILES[@]}"; do
@@ -33,6 +35,11 @@ done
 if [ -f "/etc/xdg/quickshell/caelestia/modules/launcher/ColorFilterBar.qml" ]; then
     rm -f "/etc/xdg/quickshell/caelestia/modules/launcher/ColorFilterBar.qml"
     echo "Removed ColorFilterBar.qml"
+fi
+
+if [ -f "/etc/xdg/quickshell/caelestia/modules/nexus/pages/wallandstyle/WallpaperSettings.qml" ]; then
+    rm -f "/etc/xdg/quickshell/caelestia/modules/nexus/pages/wallandstyle/WallpaperSettings.qml"
+    echo "Removed WallpaperSettings.qml"
 fi
 
 echo "-> Searching for Caelestia Python module path..."
