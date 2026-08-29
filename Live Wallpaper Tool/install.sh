@@ -86,4 +86,35 @@ cp bin/update-caelestia-live-thumbs "$USER_HOME/.local/bin/"
 chmod +x "$USER_HOME/.local/bin/update-caelestia-live-thumbs"
 chown "$REAL_USER:$REAL_USER" "$USER_HOME/.local/bin/update-caelestia-live-thumbs"
 
+echo "-> Setting up wallpaper directories..."
+PICTURES_DIR=""
+if command -v xdg-user-dir &>/dev/null; then
+    PICTURES_DIR=$(sudo -u "$REAL_USER" xdg-user-dir PICTURES 2>/dev/null)
+fi
+
+if [ -z "$PICTURES_DIR" ] || [ ! -d "$PICTURES_DIR" ]; then
+    if [ -d "$USER_HOME/Imágenes" ]; then
+        PICTURES_DIR="$USER_HOME/Imágenes"
+    else
+        PICTURES_DIR="$USER_HOME/Pictures"
+    fi
+fi
+
+LIVE_WALLPAPERS_DIR="$PICTURES_DIR/Live-Wallpapers"
+STATIC_WALLPAPERS_DIR="$PICTURES_DIR/Wallpapers"
+
+if [ ! -d "$LIVE_WALLPAPERS_DIR" ]; then
+    mkdir -p "$LIVE_WALLPAPERS_DIR"
+    chown "$REAL_USER:$REAL_USER" "$LIVE_WALLPAPERS_DIR"
+    echo "   Created Live-Wallpapers directory: $LIVE_WALLPAPERS_DIR"
+else
+    echo "   Live-Wallpapers directory already exists: $LIVE_WALLPAPERS_DIR"
+fi
+
+if [ ! -d "$STATIC_WALLPAPERS_DIR" ]; then
+    mkdir -p "$STATIC_WALLPAPERS_DIR"
+    chown "$REAL_USER:$REAL_USER" "$STATIC_WALLPAPERS_DIR"
+    echo "   Created Wallpapers directory: $STATIC_WALLPAPERS_DIR"
+fi
+
 echo "Installation completed! Please restart your system (systemctl reboot) to apply changes."
