@@ -6,7 +6,6 @@ import qs.components
 import qs.components.effects
 import qs.components.images
 import qs.services
-import QtMultimedia
 
 Item {
     id: root
@@ -18,38 +17,10 @@ Item {
     opacity: 0
     z: PathView.z ?? 0 // qmllint disable missing-property
 
-    property string formatIcon: String(root.modelData.path).match(/\.(mp4|mkv|webm|avi|mov)$/i) ? "smart_display" : "image"
-    property string formatText: {
-        let path = String(root.modelData.path);
-        let props = Wallpapers.propertiesCache[path];
-        if (props) {
-            let str = typeof props === "string" ? props : (props.info || "");
-            let parts = str.split(", ");
-            if (parts.length >= 2) return parts[1].trim();
-        }
-        return path.split(".").pop().toUpperCase();
-    }
-    property string fpsText: {
-        let path = String(root.modelData.path);
-        let props = Wallpapers.propertiesCache[path];
-        if (props) {
-            let str = typeof props === "string" ? props : (props.info || "");
-            let parts = str.split(", ");
-            if (parts.length === 3) return parts[2].trim();
-        }
-        return "";
-    }
-    property string resText: {
-        let path = String(root.modelData.path);
-        let props = Wallpapers.propertiesCache[path];
-        if (props) {
-            let str = typeof props === "string" ? props : (props.info || "");
-            let parts = str.split(", ");
-            return parts[0].trim();
-        }
-        let fileName = path.split("/").pop();
-        return fileName.substring(0, fileName.lastIndexOf(".")) || fileName;
-    }
+    property string formatIcon: Wallpapers.isVideo(root.modelData.path) ? "smart_display" : "image"
+    property string formatText: Wallpapers.getFormat(root.modelData.path)
+    property string fpsText: Wallpapers.getFps(root.modelData.path)
+    property string resText: Wallpapers.getResolution(root.modelData.path)
 
     Component.onCompleted: {
         scale = Qt.binding(() => PathView.isCurrentItem ? 1 : PathView.onPath ? 0.8 : 0);
@@ -103,16 +74,7 @@ Item {
 
         CachingImage {
             anchors.fill: parent
-            path: {
-                let pathStr = String(root.modelData.path);
-                if (pathStr && pathStr.match(/\.(mp4|mkv|webm|avi|mov)$/i)) {
-                    let parts = pathStr.split("/");
-                    let homeDir = "/" + parts[1] + "/" + parts[2];
-                    let fileName = parts[parts.length - 1];
-                    return homeDir + "/.cache/caelestia/live_thumbs/" + fileName + ".jpg";
-                }
-                return pathStr || "";
-            }
+            path: Wallpapers.getThumb(root.modelData?.path ?? "")
             smooth: !root.PathView.view.moving
             sourceSize: {
                 const dpr = (QsWindow.window as QsWindow)?.devicePixelRatio ?? 1;

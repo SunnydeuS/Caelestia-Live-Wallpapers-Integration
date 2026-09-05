@@ -168,7 +168,7 @@ StyledRect {
             color: Colours.palette.m3outlineVariant
         }
 
-        // Settings gear button (Tuerquita)
+        // Settings gear button
         StyledRect {
             id: settingsBtn
             anchors.verticalCenter: parent.verticalCenter

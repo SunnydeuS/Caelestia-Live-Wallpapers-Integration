@@ -4,11 +4,7 @@ import random
 import subprocess
 from argparse import Namespace
 from pathlib import Path
-from typing import cast
-
-from materialyoucolor.hct import Hct
-from materialyoucolor.utils.color_utils import argb_from_rgb
-from PIL import Image
+from typing import Any, cast
 
 from caelestia.utils.colourfulness import get_variant
 from caelestia.utils.hypr import message
@@ -23,22 +19,69 @@ from caelestia.utils.paths import (
 )
 from caelestia.utils.scheme import Scheme, get_scheme
 from caelestia.utils.theme import apply_colours
+from materialyoucolor.hct import Hct
+from materialyoucolor.utils.color_utils import argb_from_rgb
+from PIL import Image
+
+VIDEO_EXTENSIONS = {".mp4", ".mkv", ".webm", ".avi", ".mov"}
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".gif"}
+VALID_EXTENSIONS = IMAGE_EXTENSIONS | VIDEO_EXTENSIONS
+
+
+def is_video(path: Path) -> bool:
+    return path.suffix.lower() in VIDEO_EXTENSIONS
 
 
 def is_valid_image(path: Path) -> bool:
-    return path.is_file() and path.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".gif", ".mp4", ".mkv", ".webm", ".avi", ".mov"]
+    return path.is_file() and path.suffix.lower() in VALID_EXTENSIONS
 
 
 def check_wall(wall: Path, filter_size: tuple[int, int], threshold: float) -> bool:
-    with Image.open(wall) as img:
-        width, height = img.size
-        return width >= filter_size[0] * threshold and height >= filter_size[1] * threshold
+    if is_video(wall):
+        try:
+            res = subprocess.run(
+                [
+                    "ffprobe",
+                    "-v",
+                    "error",
+                    "-select_streams",
+                    "v:0",
+                    "-show_entries",
+                    "stream=width,height",
+                    "-of",
+                    "csv=s=x:p=0",
+                    str(wall),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=2,
+                check=False,
+            )
+            if res.returncode == 0 and "x" in res.stdout:
+                w, h = map(int, res.stdout.strip().split("x")[:2])
+                return (
+                    w >= filter_size[0] * threshold and h >= filter_size[1] * threshold
+                )
+        except (OSError, subprocess.SubprocessError, ValueError):
+            return True
+        return True
+
+    try:
+        with Image.open(wall) as img:
+            width, height = img.size
+            return (
+                width >= filter_size[0] * threshold
+                and height >= filter_size[1] * threshold
+            )
+    except (OSError, ValueError):
+        return False
 
 
 def get_wallpaper() -> str | None:
     try:
         return wallpaper_path_path.read_text()
-    except IOError:
+    except OSError:
         return None
 
 
@@ -61,15 +104,32 @@ def get_wallpapers(args: Namespace) -> list[Path]:
 def get_thumb(wall: Path, cache: Path) -> Path:
     thumb = cache / "thumbnail.jpg"
 
-    if not thumb.exists():
+    if not thumb.exists() or thumb.stat().st_size == 0:
         thumb.parent.mkdir(parents=True, exist_ok=True)
-        if wall.suffix.lower() in [".mp4", ".mkv", ".webm", ".avi", ".mov"]:
-            import subprocess
+        if is_video(wall):
             try:
-                subprocess.run(["ffmpeg", "-i", str(wall), "-ss", "00:00:00", "-vframes", "1", str(thumb)], check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-            except Exception:
+                subprocess.run(
+                    [
+                        "ffmpeg",
+                        "-ss",
+                        "00:00:00",
+                        "-i",
+                        str(wall),
+                        "-an",
+                        "-vf",
+                        "scale=128:-2",
+                        "-vframes",
+                        "1",
+                        str(thumb),
+                        "-y",
+                    ],
+                    check=False,
+                    stderr=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                )
+            except (OSError, subprocess.SubprocessError):
                 pass
-            if not thumb.exists():
+            if not thumb.exists() or thumb.stat().st_size == 0:
                 img = Image.new("RGB", (128, 128), color="black")
                 img.save(thumb, "JPEG")
         else:
@@ -86,7 +146,7 @@ def get_smart_opts(wall: Path, cache: Path) -> dict:
 
     try:
         return json.loads(opts_cache.read_text())
-    except (IOError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError):
         pass
 
     opts = {}
@@ -108,7 +168,7 @@ def get_smart_opts(wall: Path, cache: Path) -> dict:
     return opts
 
 
-def get_colours_for_wall(wall: Path | str, no_smart: bool) -> None:
+def get_colours_for_wall(wall: Path | str, no_smart: bool) -> dict[str, Any]:
     wall = Path(wall)
     scheme = get_scheme()
     cache = wallpapers_cache_dir / compute_hash(wall)
@@ -211,6 +271,7 @@ def set_wallpaper(wall: Path, no_smart: bool) -> None:
                 "THUMBNAIL_PATH": str(thumb),
             },
             stderr=subprocess.DEVNULL,
+            check=False,
         )
 
 

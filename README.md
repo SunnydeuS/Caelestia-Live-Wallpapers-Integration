@@ -39,47 +39,88 @@ When using the carousel (`>wallpaper`):
 
 ## Dependencies
 
-Before installing, make sure you have the following packages installed on your system:
-- **`ffmpeg`**: Required for extracting thumbnails behind the scenes.
+Install the required packages with pacman (Arch Linux):
+
+```bash
+sudo pacman -S --needed ffmpeg xdg-user-dirs qt6-multimedia qt6-multimedia-ffmpeg python-pillow
+```
+
+*(Note: `install.sh` will also check for these packages and prompt to install them automatically).*
+
+- **`ffmpeg`**: Required for extracting video frames for thumbnails.
 - **`xdg-user-dirs`**: Used to locate your Pictures directory.
-- **`qt6-multimedia`** and **`qt6-multimedia-ffmpeg`** (or your distro's equivalent backend): Required by the QML `MediaPlayer` to actually play the video files in the UI.
+- **`qt6-multimedia`** & **`qt6-multimedia-ffmpeg`**: Required by QML `MediaPlayer` to render and play video wallpapers natively.
+- **`python-pillow`**: Required for thumbnail creation, color quantization, and palette classification.
 
 ## Where do I put my Live Wallpapers?
-Simply place your `.mp4`, `.mkv`, or `.webm` files inside `~/Pictures/Live-Wallpapers` (or whatever your equivalent localized folder is, as long as it's next to your normal `Wallpapers` folder). The script will detect them automatically.
+Simply place your `.mp4`, `.mkv`, or `.webm` files inside `~/Pictures/Live-Wallpapers` (or your localized Pictures folder). The integration will detect them automatically.
 
-## Installation
+## Updating the Wallpaper Database & Thumbnails
+
+Whenever you add, remove, or modify live wallpapers, you can update the database and regenerate thumbnails using either method:
+
+### 1. From the UI (GUI)
+- Open the wallpaper launcher (`>wallpaper`) and press **`Ctrl + R`**, or click the **Refresh** button in the launcher or Nexus wallpaper settings.
+
+### 2. From the Terminal (CLI)
+- Run the thumbnail updater command directly in your terminal:
+  ```bash
+  update-caelestia-live-thumbs
+  ```
+- To also index all your static wallpapers into the database (for color palette extraction and resolution tags):
+  ```bash
+  update-caelestia-live-thumbs --include-static
+  ```
+
+> **Where data is stored:**
+> - Thumbnails: `~/.cache/caelestia/live_thumbs/`
+> - Wallpaper metadata & color database: `~/.cache/caelestia/wallpaper_properties.json`
+
+## Installation & Setup
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/SunnydeuS/Caelestia-Live-Wallpapers-Integration.git
-   cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
+   git clone https://github.com/amitxd75/Caelestia-Live-Wallpapers-Integration.git
+   cd Caelestia-Live-Wallpapers-Integration
    ```
 
-2. Run the installation script with sudo privileges:
+2. Run the interactive setup tool:
    ```bash
-   sudo ./install.sh
+   ./setup.sh
    ```
 
-3. Reload the shell to apply the changes by pressing `Ctrl+Super+Alt+R`. If the changes are not reflected, restart your system to properly load image/video resolutions:
-   ```bash
-   systemctl reboot
-   ```
-
-## Updating
-
-To get the latest changes from this repository, run the updater script:
-```bash
-cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
-sudo ./update.sh
+This launches an interactive menu to easily install, update, or uninstall the integration:
+```text
+=====================================================
+       Caelestia Live Wallpapers Integration
+=====================================================
+  1) Install      Install integration & restart shell
+  2) Update       Pull latest changes & re-apply
+  3) Uninstall    Restore original Caelestia files
+  4) Exit
+=====================================================
+Please choose an option [1-4]: 
 ```
 
-## Uninstallation
-
-If you wish to remove this modification and revert to the stock Caelestia behavior, run the uninstallation script:
+You can also pass CLI flags directly for non-interactive execution:
 ```bash
-cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
-sudo ./uninstall.sh
+# Direct install
+./setup.sh --install
+
+# Direct update (pulls git changes and re-applies)
+./setup.sh --update
+
+# Direct uninstall (restores original files)
+./setup.sh --uninstall
 ```
+
+The script automatically detects your Caelestia user and system directories, backs up original files, generates initial thumbnails, and **automatically restarts the Caelestia shell** for your active session.
+
+If you ever need to manually restart the shell, run:
+```bash
+caelestia shell
+```
+(or press `Ctrl+Super+Alt+R`).
 
 ## Acknowledgements
 

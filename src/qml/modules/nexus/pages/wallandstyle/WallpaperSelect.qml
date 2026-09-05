@@ -165,7 +165,7 @@ PageBase {
                 model: {
                     const walls = Wallpapers.list;
                     const baseDir = Paths.wallsdir;
-                    const liveDir = Quickshell.env("CAELESTIA_LIVE_WALLPAPERS_DIR") || (Paths.wallsdir.substring(0, Paths.wallsdir.lastIndexOf('/')) + "/Live-Wallpapers");
+                    const liveDir = Wallpapers.liveWallsDir;
                     const categories = {};
                     const list = [];
                     for (const w of walls) {
@@ -191,78 +191,29 @@ PageBase {
                     opacity: modelData ? 1 : 0
                     enabled: modelData
 
-                    source: {
-                        if (!modelData) return "";
-                        let path = String(modelData.path);
-                        if (path.match(/\.(mp4|mkv|webm|avi|mov)$/i)) {
-                            let parts = path.split("/");
-                            let homeDir = "/" + parts[1] + "/" + parts[2];
-                            let fileName = parts[parts.length - 1];
-                            return homeDir + "/.cache/caelestia/live_thumbs/" + fileName + ".jpg";
-                        }
-                        return path;
-                    }
+                    readonly property bool isCategory: Boolean(modelData && modelData.parentDir !== Paths.wallsdir && modelData.parentDir !== Wallpapers.liveWallsDir)
+
+                    source: Wallpapers.getThumb(modelData?.path ?? "")
                     formatIcon: {
                         if (!modelData) return "";
-                        const liveDir = Quickshell.env("CAELESTIA_LIVE_WALLPAPERS_DIR") || (Paths.wallsdir.substring(0, Paths.wallsdir.lastIndexOf('/')) + "/Live-Wallpapers");
-                        if (modelData.parentDir !== Paths.wallsdir && modelData.parentDir !== liveDir) {
-                            return "folder";
-                        }
-                        return String(modelData.path).match(/\.(mp4|mkv|webm|avi|mov)$/i) ? "smart_display" : "image";
+                        if (isCategory) return "folder";
+                        return Wallpapers.isVideo(modelData.path) ? "smart_display" : "image";
                     }
-                    formatText: {
-                        if (!modelData) return "";
-                        const liveDir = Quickshell.env("CAELESTIA_LIVE_WALLPAPERS_DIR") || (Paths.wallsdir.substring(0, Paths.wallsdir.lastIndexOf('/')) + "/Live-Wallpapers");
-                        if (modelData.parentDir !== Paths.wallsdir && modelData.parentDir !== liveDir) return "";
-                        let path = String(modelData.path);
-                        let props = Wallpapers.propertiesCache[path];
-                        if (props) {
-                            let str = typeof props === "string" ? props : (props.info || "");
-                            let parts = str.split(", ");
-                            if (parts.length >= 2) return parts[1];
-                        }
-                        return path.split(".").pop().toUpperCase();
-                    }
-                    fpsText: {
-                        if (!modelData) return "";
-                        const liveDir = Quickshell.env("CAELESTIA_LIVE_WALLPAPERS_DIR") || (Paths.wallsdir.substring(0, Paths.wallsdir.lastIndexOf('/')) + "/Live-Wallpapers");
-                        if (modelData.parentDir !== Paths.wallsdir && modelData.parentDir !== liveDir) return "";
-                        let path = String(modelData.path);
-                        let props = Wallpapers.propertiesCache[path];
-                        if (props) {
-                            let str = typeof props === "string" ? props : (props.info || "");
-                            let parts = str.split(", ");
-                            if (parts.length === 3) return parts[2];
-                        }
-                        return "";
-                    }
-                    resText: {
-                        if (!modelData) return "";
-                        const liveDir = Quickshell.env("CAELESTIA_LIVE_WALLPAPERS_DIR") || (Paths.wallsdir.substring(0, Paths.wallsdir.lastIndexOf('/')) + "/Live-Wallpapers");
-                        if (modelData.parentDir !== Paths.wallsdir && modelData.parentDir !== liveDir) return "";
-                        let path = String(modelData.path);
-                        let props = Wallpapers.propertiesCache[path];
-                        if (props) {
-                            let str = typeof props === "string" ? props : (props.info || "");
-                            let parts = str.split(", ");
-                            return parts[0];
-                        }
-                        return "";
-                    }
+                    formatText: !isCategory && modelData ? Wallpapers.getFormat(modelData.path) : ""
+                    fpsText: !isCategory && modelData ? Wallpapers.getFps(modelData.path) : ""
+                    resText: !isCategory && modelData ? Wallpapers.getResolution(modelData.path) : ""
                     text: {
                         if (!modelData)
                             return "";
 
-                        const liveDir = Quickshell.env("CAELESTIA_LIVE_WALLPAPERS_DIR") || (Paths.wallsdir.substring(0, Paths.wallsdir.lastIndexOf('/')) + "/Live-Wallpapers");
-                        if (modelData.parentDir !== Paths.wallsdir && modelData.parentDir !== liveDir) {
+                        if (isCategory) {
                             const category = Wallpapers.getCategoryFor(modelData);
                             return category.slice(0, 1).toUpperCase() + category.slice(1);
                         }
                         return modelData.name;
                     }
                     onClicked: {
-                        const liveDir = Quickshell.env("CAELESTIA_LIVE_WALLPAPERS_DIR") || (Paths.wallsdir.substring(0, Paths.wallsdir.lastIndexOf('/')) + "/Live-Wallpapers");
-                        if (modelData.parentDir !== Paths.wallsdir && modelData.parentDir !== liveDir) {
+                        if (isCategory) {
                             root.nState.selectedWallpaperCategory = Wallpapers.getCategoryFor(modelData);
                             root.nState.openSubPage(2); // Category page
                         } else {

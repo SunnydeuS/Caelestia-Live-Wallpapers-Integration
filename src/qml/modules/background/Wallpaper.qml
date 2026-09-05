@@ -17,36 +17,23 @@ Item {
     property var current
     property bool completed
 
-    onSourceChanged: {
-        if (!source)
+    function createWallpaper(src: string): void {
+        if (!src) {
             current = null;
-        else {
-            if (source.match(/\.(mp4|mkv|webm|avi|mov)$/i)) {
-                current = videoComp.createObject(this, {
-                    path: source
-                });
-            } else {
-                current = imgComp.createObject(this, {
-                    path: source
-                });
-            }
+            return;
         }
+        const comp = Wallpapers.isVideo(src) ? videoComp : imgComp;
+        current = comp.createObject(root, { path: src });
     }
+
+    onSourceChanged: createWallpaper(source)
 
     Component.onCompleted: {
         completed = true;
         if (!current && source) {
             Qt.callLater(() => {
                 if (!current && source) {
-                    if (source.match(/\.(mp4|mkv|webm|avi|mov)$/i)) {
-                        current = videoComp.createObject(this, {
-                            path: source
-                        });
-                    } else {
-                        current = imgComp.createObject(this, {
-                            path: source
-                        });
-                    }
+                    createWallpaper(source);
                 }
             });
         }

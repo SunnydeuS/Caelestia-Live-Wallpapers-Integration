@@ -24,6 +24,55 @@ Searcher {
 
     property var propertiesCache: ({})
 
+    readonly property var videoRegex: /\.(mp4|mkv|webm|avi|mov)$/i
+    readonly property string liveWallsDir: Quickshell.env("CAELESTIA_LIVE_WALLPAPERS_DIR") || (Paths.wallsdir.substring(0, Paths.wallsdir.lastIndexOf('/')) + "/Live-Wallpapers")
+
+    function isVideo(path: string): bool {
+        return Boolean(path && videoRegex.test(path));
+    }
+
+    function getThumb(path: string): string {
+        if (!path) return "";
+        if (!isVideo(path)) return path;
+        let fileName = path.split("/").pop();
+        let cacheDir = (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/caelestia";
+        return cacheDir + "/live_thumbs/" + fileName + ".jpg";
+    }
+
+    function getFormat(path: string): string {
+        if (!path) return "";
+        let props = propertiesCache[path];
+        if (props) {
+            let str = typeof props === "string" ? props : (props.info || "");
+            let parts = str.split(", ");
+            if (parts.length >= 2) return parts[1].trim();
+        }
+        return path.split(".").pop().toUpperCase();
+    }
+
+    function getFps(path: string): string {
+        if (!path) return "";
+        let props = propertiesCache[path];
+        if (props) {
+            let str = typeof props === "string" ? props : (props.info || "");
+            let parts = str.split(", ");
+            if (parts.length === 3) return parts[2].trim();
+        }
+        return "";
+    }
+
+    function getResolution(path: string): string {
+        if (!path) return "";
+        let props = propertiesCache[path];
+        if (props) {
+            let str = typeof props === "string" ? props : (props.info || "");
+            let parts = str.split(", ");
+            return parts[0].trim();
+        }
+        let fileName = path.split("/").pop();
+        return fileName ? (fileName.substring(0, fileName.lastIndexOf(".")) || fileName) : "";
+    }
+
     // Live Wallpaper Settings
     property bool behaviorEnabled: true
     property bool batteryLimitEnabled: true
@@ -92,21 +141,10 @@ Searcher {
     }
 
     function setRandom(): void {
-        let arr = [];
-        if (wallpapers.entries) {
-            for (let i = 0; i < wallpapers.entries.length; i++) {
-                arr.push(wallpapers.entries[i].path);
-            }
-        }
-        if (liveWallpapers.entries) {
-            for (let i = 0; i < liveWallpapers.entries.length; i++) {
-                arr.push(liveWallpapers.entries[i].path);
-            }
-        }
-        
-        if (arr.length > 0) {
-            let randomIndex = Math.floor(Math.random() * arr.length);
-            setWallpaper(arr[randomIndex]);
+        let pool = allEntries;
+        if (pool && pool.length > 0) {
+            let randomIndex = Math.floor(Math.random() * pool.length);
+            setWallpaper(pool[randomIndex].path);
         }
     }
 
@@ -222,28 +260,21 @@ Searcher {
     }
 
     property var allEntries: {
-        let arr = [];
-        if (filterMode === 0 || filterMode === 2) {
-            if (wallpapers.entries) {
-                for (let i = 0; i < wallpapers.entries.length; i++) {
-                    let entry = wallpapers.entries[i];
-                    if (matchesColor(entry.path, colorFilter)) {
-                        arr.push(entry);
-                    }
-                }
-            }
+        let liveEntries = (liveWallpapers.entries || []).filter(entry => entry && isVideo(entry.path));
+        let base = [];
+        if (filterMode === 0) {
+            base = wallpapers.entries || [];
+        } else if (filterMode === 1) {
+            base = liveEntries;
+        } else {
+            base = (wallpapers.entries || []).concat(liveEntries);
         }
-        if (filterMode === 1 || filterMode === 2) {
-            if (liveWallpapers.entries) {
-                for (let i = 0; i < liveWallpapers.entries.length; i++) {
-                    let entry = liveWallpapers.entries[i];
-                    if (matchesColor(entry.path, colorFilter)) {
-                        arr.push(entry);
-                    }
-                }
-            }
+
+        if (!colorFilter || colorFilter === "" || colorFilter === "all") {
+            return base;
         }
-        return arr;
+
+        return base.filter(entry => entry && matchesColor(entry.path, colorFilter));
     }
 
     list: allEntries
@@ -302,7 +333,7 @@ Searcher {
         id: liveWallpapers
 
         recursive: true
-        path: Quickshell.env("CAELESTIA_LIVE_WALLPAPERS_DIR") || (Paths.wallsdir.substring(0, Paths.wallsdir.lastIndexOf('/')) + "/Live-Wallpapers")
+        path: root.liveWallsDir
         filter: FileSystemModel.Files
     }
 

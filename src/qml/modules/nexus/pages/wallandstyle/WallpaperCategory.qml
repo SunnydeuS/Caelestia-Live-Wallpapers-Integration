@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Caelestia.Config
 import Caelestia.Models
 import qs.services
@@ -40,17 +41,7 @@ PageBase {
                 opacity: modelData ? 1 : 0
                 enabled: modelData
 
-                source: {
-                    if (!modelData) return "";
-                    let path = String(modelData.path);
-                    if (path.match(/\.(mp4|mkv|webm|avi|mov)$/i)) {
-                        let parts = path.split("/");
-                        let homeDir = "/" + parts[1] + "/" + parts[2];
-                        let fileName = parts[parts.length - 1];
-                        return homeDir + "/.cache/caelestia/live_thumbs/" + fileName + ".jpg";
-                    }
-                    return path;
-                }
+                source: Wallpapers.getThumb(modelData?.path ?? "")
                 text: modelData?.name ?? ""
                 onClicked: {
                     Wallpapers.setWallpaper(modelData.path);
