@@ -4,10 +4,12 @@ Una integración no oficial realizada por mi para el ecosistema [Caelestia](http
 
 > **Nota**: Todo el crédito de la shell es para el equipo de Caelestia. Este proyecto es simplemente mi integración personalizada para añadir capacidades de fondos animados y pequeñas funciones adicionales.
 
-*También disponible en [Inglés (English)](README.md).*
+_También disponible en [Inglés (English)](README.md)._
 
 ## Nota de Compatibilidad
+
 Este script de instalación asume el uso de rutas estándar de Linux y permisos de escritura en `/usr/lib` y `/etc`. Está pensado y probado principalmente para **Arch Linux** y sus derivadas (CachyOS, EndeavourOS, etc.).
+
 - Asegúrate de tener Caelestia instalado antes de ejecutar este script. Esta modificación parchea los archivos del sistema en `/etc/xdg/quickshell/caelestia/` y crea copias de seguridad de los archivos originales (`.bak`).
 
 ## Características
@@ -23,7 +25,7 @@ Al usar el carrusel (`>wallpaper`):
 
 - **`Tab`**: Selecciona un fondo aleatorio.
 - **`Shift + Tab`** / **`Backtab`**: Cicla entre los filtros de colores.
-- **`Flecha Izquierda` / `Flecha Derecha`**: Cambia la vista entre fondos *Estáticos*, *Animados* y *Todos*.
+- **`Flecha Izquierda` / `Flecha Derecha`**: Cambia la vista entre fondos _Estáticos_, _Animados_ y _Todos_.
 - **`Ctrl + R`**: Recarga la lista de fondos y actualiza las miniaturas.
 
 ## Cómo funciona
@@ -36,35 +38,39 @@ Al usar el carrusel (`>wallpaper`):
 ## Dependencias
 
 Antes de instalar, asegúrate de tener los siguientes paquetes instalados en tu sistema:
+
 - **`ffmpeg`**: Necesario para extraer miniaturas en segundo plano.
 - **`xdg-user-dirs`**: Utilizado para localizar tu carpeta de Imágenes.
 - **`qt6-multimedia`** y **`qt6-multimedia-ffmpeg`** (o el backend equivalente en tu distribución): Necesarios por el `MediaPlayer` de QML para reproducir los archivos de video en la interfaz.
 
 ## ¿Dónde pongo mis Fondos Animados?
-Simplemente coloca tus archivos `.mp4`, `.mkv`, o `.webm` dentro de `~/Imágenes/Live-Wallpapers` (o tu carpeta equivalente localizada, siempre que esté junto a tu carpeta normal de `Wallpapers` o fondos). El script los detectará automáticamente.
 
+Simplemente coloca tus archivos `.mp4`, `.mkv`, o `.webm` dentro de `~/Imágenes/Live-Wallpapers`. El script los detectará automáticamente.
 
 ## Instalación
 
 1. Clona este repositorio:
-   ```bash
-   git clone https://github.com/SunnydeuS/Caelestia-Live-Wallpapers-Integration.git
-   cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
-   ```
+
+    ```bash
+    git clone https://github.com/SunnydeuS/Caelestia-Live-Wallpapers-Integration.git
+    cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
+    ```
 
 2. Ejecuta el script de instalación con privilegios sudo:
-   ```bash
-   sudo ./install.sh
-   ```
+
+    ```bash
+    sudo ./install.sh
+    ```
 
 3. Recarga la shell para aplicar los cambios presionando `Ctrl+Super+Alt+R` (o `Ctrl+Supr+Alt+R`). Si los cambios aún no se reflejan, reinicia tu sistema para cargar correctamente las resoluciones de imagen/video:
-   ```bash
-   systemctl reboot
-   ```
+    ```bash
+    systemctl reboot
+    ```
 
 ## Actualización
 
 Para obtener los últimos cambios de este repositorio, ejecuta el script de actualización:
+
 ```bash
 cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
 sudo ./update.sh
@@ -73,6 +79,7 @@ sudo ./update.sh
 ## Desinstalación
 
 Si deseas eliminar esta modificación y volver al comportamiento original de Caelestia, ejecuta el script de desinstalación:
+
 ```bash
 cd "Caelestia-Live-Wallpapers-Integration/Live Wallpaper Tool"
 sudo ./uninstall.sh

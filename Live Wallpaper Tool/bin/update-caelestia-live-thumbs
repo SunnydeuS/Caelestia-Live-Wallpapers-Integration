@@ -172,6 +172,17 @@ def classify_colors_high_precision(img_path):
     except Exception:
         return "black", ["black", "grey"]
 
+def should_refresh_cache(source_path, thumb_path):
+    if not os.path.exists(source_path):
+        return False
+    if not os.path.exists(thumb_path):
+        return True
+    try:
+        return os.path.getmtime(source_path) > os.path.getmtime(thumb_path)
+    except OSError:
+        return True
+
+
 def process_file(filepath, is_video):
     ext = filepath.split(".")[-1].upper()
     info_str = ""
@@ -185,9 +196,24 @@ def process_file(filepath, is_video):
             info_str = f"{ext}"
             
         thumb_path = os.path.join(THUMBS_DIR, f"{os.path.basename(filepath)}.jpg")
-        if not os.path.exists(thumb_path):
+        if should_refresh_cache(filepath, thumb_path):
             print(f"Generating thumbnail for: {os.path.basename(filepath)}")
-            subprocess.run(["ffmpeg", "-ss", "00:00:02", "-i", filepath, "-an", "-vf", "scale=384:-1", "-vframes", "1", thumb_path, "-y", "-loglevel", "error"])
+            subprocess.run([
+                "ffmpeg",
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-y",
+                "-i",
+                filepath,
+                "-frames:v",
+                "1",
+                "-vf",
+                "scale=384:-1:flags=lanczos",
+                "-q:v",
+                "2",
+                thumb_path,
+            ])
             
         analyze_path = thumb_path if os.path.exists(thumb_path) else None
     else:

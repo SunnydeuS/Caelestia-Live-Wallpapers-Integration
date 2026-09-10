@@ -10,6 +10,27 @@ from materialyoucolor.hct import Hct
 from materialyoucolor.utils.color_utils import argb_from_rgb
 from PIL import Image
 
+try:
+    from video_cache import VALID_WALLPAPER_EXTENSIONS, VIDEO_EXTENSIONS, is_video_file, should_regenerate_cache
+except ImportError:  # pragma: no cover - fallback for packaged installations
+    VIDEO_EXTENSIONS = {".mp4", ".mkv", ".webm", ".avi", ".mov"}
+    VALID_WALLPAPER_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".gif", *VIDEO_EXTENSIONS}
+
+    def is_video_file(path: Path | str) -> bool:
+        return Path(path).suffix.lower() in VIDEO_EXTENSIONS
+
+    def should_regenerate_cache(source: Path | str, cache: Path | str) -> bool:
+        source_path = Path(source)
+        cache_path = Path(cache)
+        if not source_path.exists():
+            return False
+        if not cache_path.exists():
+            return True
+        try:
+            return source_path.stat().st_mtime_ns > cache_path.stat().st_mtime_ns
+        except OSError:
+            return True
+
 from caelestia.utils.colourfulness import get_variant
 from caelestia.utils.hypr import message
 from caelestia.utils.material import get_colours_for_image
@@ -26,7 +47,7 @@ from caelestia.utils.theme import apply_colours
 
 
 def is_valid_image(path: Path) -> bool:
-    return path.is_file() and path.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".gif", ".mp4", ".mkv", ".webm", ".avi", ".mov"]
+    return path.is_file() and path.suffix.lower() in VALID_WALLPAPER_EXTENSIONS
 
 
 def check_wall(wall: Path, filter_size: tuple[int, int], threshold: float) -> bool:
@@ -61,22 +82,45 @@ def get_wallpapers(args: Namespace) -> list[Path]:
 def get_thumb(wall: Path, cache: Path) -> Path:
     thumb = cache / "thumbnail.jpg"
 
-    if not thumb.exists():
-        thumb.parent.mkdir(parents=True, exist_ok=True)
-        if wall.suffix.lower() in [".mp4", ".mkv", ".webm", ".avi", ".mov"]:
-            import subprocess
-            try:
-                subprocess.run(["ffmpeg", "-i", str(wall), "-ss", "00:00:00", "-vframes", "1", str(thumb)], check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-            except Exception:
-                pass
-            if not thumb.exists():
-                img = Image.new("RGB", (128, 128), color="black")
-                img.save(thumb, "JPEG")
-        else:
-            with Image.open(wall) as img:
-                img = img.convert("RGB")
-                img.thumbnail((128, 128), Image.Resampling.NEAREST)
-                img.save(thumb, "JPEG")
+    if thumb.exists() and not should_regenerate_cache(wall, thumb):
+        return thumb
+
+    thumb.parent.mkdir(parents=True, exist_ok=True)
+
+    if is_video_file(wall):
+        try:
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-y",
+                    "-i",
+                    str(wall),
+                    "-frames:v",
+                    "1",
+                    "-vf",
+                    "scale=384:-1:flags=lanczos",
+                    "-q:v",
+                    "2",
+                    str(thumb),
+                ],
+                check=True,
+                stderr=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+            )
+        except Exception:
+            pass
+
+        if not thumb.exists():
+            img = Image.new("RGB", (128, 128), color="black")
+            img.save(thumb, "JPEG", quality=70, optimize=True)
+    else:
+        with Image.open(wall) as img:
+            img = img.convert("RGB")
+            img.thumbnail((128, 128), Image.Resampling.LANCZOS)
+            img.save(thumb, "JPEG", quality=82, optimize=True)
 
     return thumb
 

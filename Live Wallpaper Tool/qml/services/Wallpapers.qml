@@ -7,6 +7,7 @@ import Caelestia.Config
 import Caelestia.Models
 import qs.services
 import qs.utils
+import M3Shapes
 
 Searcher {
     id: root
@@ -22,9 +23,15 @@ Searcher {
     property bool previewColourLock
     property bool pendingPreviewClear
 
+    readonly property var shapes: [MaterialShape.Circle, MaterialShape.Square, MaterialShape.Diamond, MaterialShape.ClamShell, MaterialShape.Pentagon, MaterialShape.Gem, MaterialShape.Clover4Leaf, MaterialShape.SoftBurst, MaterialShape.Cookie6Sided]
+
     property var propertiesCache: ({})
 
     // Live Wallpaper Settings
+    property bool disableAnimations: false // default: false = animations enabled
+    property int animationDuration: 500 // ms, 1..2000
+    readonly property bool animsEnabled: !root.disableAnimations
+
     property bool behaviorEnabled: true
     property bool batteryLimitEnabled: true
     property int batteryLimit: 40
@@ -40,12 +47,23 @@ Searcher {
         onLoaded: {
             try {
                 const data = JSON.parse(text().trim());
+                if (data.disableAnimations !== undefined) root.disableAnimations = data.disableAnimations;
+                else root.disableAnimations = false;
+                if (data.animationDuration !== undefined) {
+                    const v = Number(data.animationDuration);
+                    root.animationDuration = Number.isFinite(v) ? Math.max(1, Math.min(2000, v)) : 500;
+                } else {
+                    root.animationDuration = 500;
+                }
                 if (data.behaviorEnabled !== undefined) root.behaviorEnabled = data.behaviorEnabled;
                 if (data.batteryLimitEnabled !== undefined) root.batteryLimitEnabled = data.batteryLimitEnabled;
                 if (data.batteryLimit !== undefined) root.batteryLimit = data.batteryLimit;
                 if (data.pauseOnFullscreen !== undefined) root.pauseOnFullscreen = data.pauseOnFullscreen;
                 if (data.pauseOnGameMode !== undefined) root.pauseOnGameMode = data.pauseOnGameMode;
-            } catch(e) {}
+            } catch(e) {
+                root.disableAnimations = false;
+                root.animationDuration = 500;
+            }
             root.settingsLoaded = true;
         }
         onLoadFailed: err => {
@@ -58,6 +76,8 @@ Searcher {
 
     function saveSettings(): void {
         let data = {
+            disableAnimations: root.disableAnimations,
+            animationDuration: root.animationDuration,
             behaviorEnabled: root.behaviorEnabled,
             batteryLimitEnabled: root.batteryLimitEnabled,
             batteryLimit: root.batteryLimit,

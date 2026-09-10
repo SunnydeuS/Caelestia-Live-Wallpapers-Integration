@@ -19,9 +19,39 @@ PageBase {
         width: root.cappedWidth
         spacing: Tokens.spacing.extraSmall / 2
 
-        // Energy Settings
+        // Animations
         SectionHeader {
             first: true
+            text: qsTr("Animations")
+        }
+
+        ToggleRow {
+            first: true
+            text: qsTr("Enable Animations")
+            subtext: qsTr("Use wallpaper transitions and motion effects")
+            checked: !Wallpapers.disableAnimations
+            onToggled: {
+                Wallpapers.disableAnimations = !checked;
+                Wallpapers.saveSettings();
+            }
+        }
+
+        StepperRow {
+            last: true
+            label: qsTr("Transition duration")
+            subtext: qsTr("Set the animation speed in milliseconds (%1 ms)").arg(Wallpapers.animationDuration)
+            value: Wallpapers.animationDuration
+            from: 1
+            to: 2000
+            stepSize: 25
+            onMoved: v => {
+                Wallpapers.animationDuration = v;
+                Wallpapers.saveSettings();
+            }
+        }
+
+        // Energy Settings
+        SectionHeader {
             text: qsTr("Energy settings")
         }
 
