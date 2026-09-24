@@ -170,13 +170,17 @@ Item {
             property bool isVideo: true
             property string path
             property string thumbnailSource: ""
+            readonly property string resolvedPlayback: {
+                const cache = Wallpapers.propertiesCache;
+                return path ? Wallpapers.playbackPath(path) : "";
+            }
             property bool isReady: player.mediaStatus === MediaPlayer.LoadedMedia || player.mediaStatus === MediaPlayer.BufferedMedia || player.mediaStatus === MediaPlayer.BufferingMedia || player.playbackState === MediaPlayer.PlayingState || player.playbackState === MediaPlayer.PausedState
             readonly property real maxRadius: Math.sqrt(width * width + height * height)
             property real maskRadius: 0
             property int currentShape: root.shapes[Math.floor(Math.random() * root.shapes.length)] ?? MaterialShape.Circle
             anchors.fill: parent
             opacity: 0
-            layer.enabled: true
+            layer.enabled: maskAnim.running
             layer.effect: MultiEffect {
                 maskEnabled: true
                 maskSource: maskSourceItem
@@ -207,7 +211,7 @@ Item {
 
             MediaPlayer {
                 id: player
-                source: vidRoot.path ? "file://" + vidRoot.path : ""
+                source: vidRoot.resolvedPlayback ? "file://" + vidRoot.resolvedPlayback : ""
                 videoOutput: videoOutput
                 audioOutput: null
                 loops: MediaPlayer.Infinite
@@ -259,9 +263,6 @@ Item {
                 }
 
                 Component.onCompleted: {
-                    if (vidRoot.path) {
-                        player.source = "file://" + vidRoot.path;
-                    }
                     if (!isCovered) play();
                     if (isCovered) {
                         Qt.callLater(() => {
@@ -280,7 +281,7 @@ Item {
             Item {
                 id: maskWrapper
                 anchors.fill: parent
-                visible: true
+                visible: maskAnim.running
 
                 MaterialShape {
                     anchors.centerIn: parent
@@ -297,7 +298,7 @@ Item {
                 sourceItem: maskWrapper
                 anchors.fill: parent
                 hideSource: true
-                live: true
+                live: maskAnim.running
                 visible: false
             }
 
@@ -366,14 +367,18 @@ Item {
                 thumbPreview.opacity = 1;
                 opacity = 0;
 
-                if (player.source !== "file://" + path) {
-                    player.stop();
-                    player.source = "file://" + path;
-                }
+                Wallpapers.ensurePlaybackCache(path);
 
                 if (!player.isCovered) {
                     player.play();
                 }
+            }
+
+            onResolvedPlaybackChanged: {
+                if (!resolvedPlayback || !path)
+                    return;
+                if (!player.isCovered)
+                    player.play();
             }
         }
     }
@@ -392,7 +397,7 @@ Item {
 
             anchors.fill: parent
             opacity: 0
-            layer.enabled: true
+            layer.enabled: maskAnim.running
             layer.effect: MultiEffect {
                 maskEnabled: true
                 maskSource: maskSourceItem
@@ -419,7 +424,7 @@ Item {
             Item {
                 id: maskWrapper
                 anchors.fill: parent
-                visible: true
+                visible: maskAnim.running
 
                 MaterialShape {
                     anchors.centerIn: parent
@@ -436,7 +441,7 @@ Item {
                 sourceItem: maskWrapper
                 anchors.fill: parent
                 hideSource: true
-                live: true
+                live: maskAnim.running
                 visible: false
             }
 

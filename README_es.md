@@ -17,6 +17,7 @@ Este script de instalación asume el uso de rutas estándar de Linux y permisos 
 - **Integración Nativa**: Los fondos animados aparecen en el Lanzador Rápido de Caelestia (>Wallpaper) y en los menús de Configuración (Nexus), junto a los fondos estáticos.
 - **Pausa Inteligente / Modo Juego**: Los videos se pausarán automáticamente cuando una ventana esté en pantalla completa (como al jugar) para ahorrar recursos del sistema.
 - **Generación Automática de Miniaturas**: Genera automáticamente miniaturas `.jpg` de los videos.
+- **Caché de reproducción (H.264)**: Transcodifica códecs pesados o no soportados (por ejemplo MPEG-4 Part 2 a 60fps) a H.264 en `~/.cache/caelestia/live_cache/`, con **FPS máximo** configurable en los ajustes de fondo de Nexus.
 - **Integración en Ajustes (Nexus)**: El menú de configuración carga y muestra correctamente la categoría de fondos animados.
 
 ## Atajos
@@ -32,7 +33,7 @@ Al usar el carrusel (`>wallpaper`):
 
 1. Reemplaza el componente `Image` por defecto con un elemento `MediaPlayer` en el módulo de fondo de Caelestia.
 2. Usa `Hypr.activeToplevel` y `GameMode.enabled` para detectar estados de pantalla completa y pausar el motor de video.
-3. Instala un script en Python (`update-caelestia-live-thumbs`) que escanea automáticamente tu carpeta de Live-Wallpapers y extrae un fotograma para usarlo como miniatura en `~/.cache/caelestia/live_thumbs/`.
+3. Instala un script en Python (`update-caelestia-live-thumbs`) que escanea tu carpeta de Live-Wallpapers, genera miniaturas en `~/.cache/caelestia/live_thumbs/` y crea cachés de reproducción en `~/.cache/caelestia/live_cache/` (VAAPI si está disponible, libx264 como respaldo).
 4. Modifica las páginas de configuración de Caelestia (`WallpaperSelect.qml`, `WallpaperCategory.qml`, y `WallpaperAndStyle.qml`) para que carguen las miniaturas sin crashear.
 
 ## Dependencias
