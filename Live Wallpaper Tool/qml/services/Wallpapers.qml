@@ -37,6 +37,7 @@ Searcher {
     property int batteryLimit: 40
     property bool pauseOnFullscreen: true
     property bool pauseOnGameMode: true
+    property int maxFps: 30
     property bool settingsLoaded: false
 
     FileView {
@@ -60,6 +61,12 @@ Searcher {
                 if (data.batteryLimit !== undefined) root.batteryLimit = data.batteryLimit;
                 if (data.pauseOnFullscreen !== undefined) root.pauseOnFullscreen = data.pauseOnFullscreen;
                 if (data.pauseOnGameMode !== undefined) root.pauseOnGameMode = data.pauseOnGameMode;
+                if (data.maxFps !== undefined) {
+                    const fps = Number(data.maxFps);
+                    root.maxFps = Number.isFinite(fps) ? Math.max(0, Math.min(60, Math.round(fps))) : 30;
+                } else {
+                    root.maxFps = 30;
+                }
             } catch(e) {
                 root.disableAnimations = false;
                 root.animationDuration = 500;
@@ -82,7 +89,8 @@ Searcher {
             batteryLimitEnabled: root.batteryLimitEnabled,
             batteryLimit: root.batteryLimit,
             pauseOnFullscreen: root.pauseOnFullscreen,
-            pauseOnGameMode: root.pauseOnGameMode
+            pauseOnGameMode: root.pauseOnGameMode,
+            maxFps: root.maxFps
         };
         liveSettingsView.setText(JSON.stringify(data, null, 4));
     }
@@ -130,8 +138,43 @@ Searcher {
         }
     }
 
+    function isVideoPath(path: string): bool {
+        return typeof path === "string" && /\.(mp4|mkv|webm|avi|mov)$/i.test(path);
+    }
+
+    function cleanWallpaperPath(path: string): string {
+        return String(path || "").replace(/^file:\/\//, "");
+    }
+
+    function playbackPath(path: string): string {
+        const clean = cleanWallpaperPath(path);
+        if (!clean)
+            return clean;
+        const entry = propertiesCache[clean] || propertiesCache[path];
+        if (entry && entry.playback)
+            return cleanWallpaperPath(entry.playback);
+        return clean;
+    }
+
+    function hasPlaybackCache(path: string): bool {
+        const clean = cleanWallpaperPath(path);
+        if (!clean)
+            return false;
+        const entry = propertiesCache[clean] || propertiesCache[path];
+        return !!(entry && entry.playback);
+    }
+
+    function ensurePlaybackCache(path: string): void {
+        const clean = cleanWallpaperPath(path);
+        if (!isVideoPath(clean) || hasPlaybackCache(clean) || transcodeProc.running)
+            return;
+        transcodeProc.filePath = clean;
+        transcodeProc.running = true;
+    }
+
     function setWallpaper(path: string): void {
         actualCurrent = path;
+        ensurePlaybackCache(path);
         Quickshell.execDetached(["caelestia", "wallpaper", "-f", path, ...smartArg]);
     }
 
@@ -143,6 +186,7 @@ Searcher {
         if (showPreview && previewPath === path)
             return;
 
+        ensurePlaybackCache(path);
         previewPath = path;
         showPreview = true;
 
@@ -173,6 +217,16 @@ Searcher {
 
     function refreshWallpapers(): void {
         refreshProc.running = true;
+    }
+
+    Process {
+        id: transcodeProc
+        property string filePath: ""
+        command: ["bash", "-c", `"${Paths.home}/.local/bin/update-caelestia-live-thumbs" --file "${filePath}" "${Paths.wallsdir}" "${liveWallpapers.path}"`]
+        onRunningChanged: {
+            if (!running && filePath)
+                propsFileView.reload();
+        }
     }
 
     Process {

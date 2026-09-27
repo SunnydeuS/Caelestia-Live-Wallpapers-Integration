@@ -1,9 +1,6 @@
-pragma ComponentBehavior: Bound
-
 import QtQuick
 import QtQuick.Layouts
 import Caelestia.Config
-import qs.components.controls
 import qs.services
 import qs.modules.nexus.common
 
@@ -19,7 +16,6 @@ PageBase {
         width: root.cappedWidth
         spacing: Tokens.spacing.extraSmall / 2
 
-        // Animations
         SectionHeader {
             first: true
             text: qsTr("Animations")
@@ -27,8 +23,8 @@ PageBase {
 
         ToggleRow {
             first: true
-            text: qsTr("Enable Animations")
-            subtext: qsTr("Use wallpaper transitions and motion effects")
+            text: qsTr("Enable animations")
+            subtext: qsTr("Animate transitions when the wallpaper changes")
             checked: !Wallpapers.disableAnimations
             onToggled: {
                 Wallpapers.disableAnimations = !checked;
@@ -36,61 +32,55 @@ PageBase {
             }
         }
 
-        StepperRow {
-            last: true
-            label: qsTr("Transition duration")
-            subtext: qsTr("Set the animation speed in milliseconds (%1 ms)").arg(Wallpapers.animationDuration)
-            value: Wallpapers.animationDuration
-            from: 1
-            to: 2000
-            stepSize: 25
+        SliderRow {
+            icon: "timer"
+            label: qsTr("Animation duration")
+            valueLabel: qsTr("%1 ms").arg(Wallpapers.animationDuration)
+            enabled: !Wallpapers.disableAnimations
+            value: (Wallpapers.animationDuration - 1) / 1999
             onMoved: v => {
-                Wallpapers.animationDuration = v;
+                Wallpapers.animationDuration = Math.round(1 + v * 1999);
                 Wallpapers.saveSettings();
             }
         }
 
-        // Energy Settings
+        SliderRow {
+            last: true
+            icon: "speed"
+            label: qsTr("Max FPS")
+            valueLabel: Wallpapers.maxFps === 0 ? qsTr("Original") : qsTr("%1 FPS").arg(Wallpapers.maxFps)
+            value: {
+                const options = [0, 24, 30, 60];
+                const idx = Math.max(0, options.indexOf(Wallpapers.maxFps));
+                return idx / (options.length - 1);
+            }
+            onMoved: v => {
+                const options = [0, 24, 30, 60];
+                Wallpapers.maxFps = options[Math.round(v * (options.length - 1))];
+                Wallpapers.saveSettings();
+                Wallpapers.refreshWallpapers();
+            }
+        }
+
         SectionHeader {
-            text: qsTr("Energy settings")
+            text: qsTr("Behavior")
         }
 
         ToggleRow {
             first: true
-            last: !Wallpapers.batteryLimitEnabled
-            text: qsTr("Battery saver")
-            subtext: qsTr("Pause live wallpapers when battery is low")
-            checked: Wallpapers.batteryLimitEnabled
+            text: qsTr("Smart pause")
+            subtext: qsTr("Pause the wallpaper using the rules below")
+            checked: Wallpapers.behaviorEnabled
             onToggled: {
-                Wallpapers.batteryLimitEnabled = checked;
+                Wallpapers.behaviorEnabled = checked;
                 Wallpapers.saveSettings();
             }
-        }
-
-        StepperRow {
-            last: true
-            visible: Wallpapers.batteryLimitEnabled
-            label: qsTr("Battery Limit")
-            subtext: qsTr("Pause live wallpapers when battery is at or below %1%").arg(Wallpapers.batteryLimit)
-            value: Wallpapers.batteryLimit
-            from: 5
-            to: 100
-            stepSize: 5
-            onMoved: v => {
-                Wallpapers.batteryLimit = v;
-                Wallpapers.saveSettings();
-            }
-        }
-
-        // Playback Behavior
-        SectionHeader {
-            text: qsTr("Playback behavior")
         }
 
         ToggleRow {
-            first: true
             text: qsTr("Pause on fullscreen")
-            subtext: qsTr("Pause playback when an application is fullscreen")
+            subtext: qsTr("Pause when a fullscreen window is focused")
+            disabled: !Wallpapers.behaviorEnabled
             checked: Wallpapers.pauseOnFullscreen
             onToggled: {
                 Wallpapers.pauseOnFullscreen = checked;
@@ -99,12 +89,36 @@ PageBase {
         }
 
         ToggleRow {
-            last: true
-            text: qsTr("Pause on Game Mode")
-            subtext: qsTr("Pause playback when Game Mode is active")
+            text: qsTr("Pause on game mode")
+            subtext: qsTr("Pause while game mode is enabled")
+            disabled: !Wallpapers.behaviorEnabled
             checked: Wallpapers.pauseOnGameMode
             onToggled: {
                 Wallpapers.pauseOnGameMode = checked;
+                Wallpapers.saveSettings();
+            }
+        }
+
+        ToggleRow {
+            text: qsTr("Battery limit")
+            subtext: qsTr("Pause below a battery percentage while discharging")
+            disabled: !Wallpapers.behaviorEnabled
+            checked: Wallpapers.batteryLimitEnabled
+            onToggled: {
+                Wallpapers.batteryLimitEnabled = checked;
+                Wallpapers.saveSettings();
+            }
+        }
+
+        SliderRow {
+            last: true
+            icon: "battery_android_4"
+            label: qsTr("Battery threshold")
+            valueLabel: qsTr("%1%").arg(Wallpapers.batteryLimit)
+            enabled: Wallpapers.behaviorEnabled && Wallpapers.batteryLimitEnabled
+            value: Wallpapers.batteryLimit / 100
+            onMoved: v => {
+                Wallpapers.batteryLimit = Math.round(v * 100);
                 Wallpapers.saveSettings();
             }
         }

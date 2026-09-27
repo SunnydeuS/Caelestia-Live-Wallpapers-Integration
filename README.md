@@ -19,6 +19,7 @@ This installation script relies on standard Linux filesystem paths and write-acc
 - **Native UI Integration**: Live wallpapers appear beautifully in the Caelestia Quick Launcher (>Wallpaper) and in the Settings menus (Nexus), side-by-side with your static wallpapers.
 - **Smart Pause / Game Mode**: Videos will automatically pause when a window is fullscreen (like playing a game) to save system resources.
 - **Auto-Thumbnail Generation**: Automatically generates `.jpg` thumbnails for the videos.
+- **Playback Cache (H.264)**: Transcodes heavy or unsupported codecs (for example MPEG-4 Part 2 @ 60fps) into GPU-friendly H.264 files under `~/.cache/caelestia/live_cache/`, with configurable **Max FPS** in Nexus wallpaper settings.
 - **Settings Integration (Nexus)**: The settings menu correctly fetches and displays the live wallpaper category.
 
 ## Shortcuts
@@ -34,7 +35,7 @@ When using the carousel (`>wallpaper`):
 
 1. It replaces the default `Image` component with a `MediaPlayer` element in Caelestia's background module.
 2. It uses `Hypr.activeToplevel` and `GameMode.enabled` to detect fullscreen states and pause the video engine.
-3. It installs a Python script (`update-caelestia-live-thumbs`) that automatically crawls your Live-Wallpapers folder and extracts a frame to serve as a thumbnail in `~/.cache/caelestia/live_thumbs/`.
+3. It installs a Python script (`update-caelestia-live-thumbs`) that crawls your Live-Wallpapers folder, extracts thumbnails in `~/.cache/caelestia/live_thumbs/`, and builds optional playback caches in `~/.cache/caelestia/live_cache/` (VAAPI when available, libx264 fallback).
 4. It patches Caelestia's setting pages (`WallpaperSelect.qml`, `WallpaperCategory.qml`, and `WallpaperAndStyle.qml`) to load the thumbnails instead of crashing.
 
 ## Dependencies
