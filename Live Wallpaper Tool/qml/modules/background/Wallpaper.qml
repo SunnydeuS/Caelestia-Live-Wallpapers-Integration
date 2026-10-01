@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell.Hyprland
 import QtQuick.Effects
 import M3Shapes
 import Caelestia.Config
@@ -225,6 +226,12 @@ Item {
 
                         if (Wallpapers.pauseOnGameMode && typeof GameMode !== 'undefined' && GameMode && GameMode.enabled) return true;
                         
+                        const toplevel = Hyprland.activeToplevel;
+                        if (Wallpapers.pauseOnWindowFocus
+                            && toplevel?.activated === true
+                            && toplevel.workspace?.focused === true)
+                             return true;
+                                        
                         if (Wallpapers.batteryLimitEnabled && Wallpapers.batteryLimit > 0 && UPower.displayDevice && UPower.displayDevice.isPresent && UPower.displayDevice.isLaptopBattery) {
                             if (UPower.displayDevice.state === UPowerDeviceState.Discharging && (UPower.displayDevice.percentage * 100) <= Wallpapers.batteryLimit) {
                                 return true;

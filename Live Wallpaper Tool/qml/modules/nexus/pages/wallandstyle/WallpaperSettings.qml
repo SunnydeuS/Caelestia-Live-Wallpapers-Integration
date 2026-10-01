@@ -78,6 +78,17 @@ PageBase {
         }
 
         ToggleRow {
+            first: true
+            text: qsTr("Pause on active window")
+            subtext: qsTr("Pause when focusing on a window")
+            checked: Wallpapers.pauseOnWindowFocus
+            onToggled: {
+                Wallpapers.pauseOnWindowFocus = checked;
+                Wallpapers.saveSettings();
+            }
+        }
+
+        ToggleRow {
             text: qsTr("Pause on fullscreen")
             subtext: qsTr("Pause when a fullscreen window is focused")
             disabled: !Wallpapers.behaviorEnabled

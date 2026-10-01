@@ -39,6 +39,7 @@ Searcher {
     property bool pauseOnGameMode: true
     property int maxFps: 30
     property bool settingsLoaded: false
+    property bool pauseOnWindowFocus: true
 
     FileView {
         id: liveSettingsView
@@ -61,6 +62,7 @@ Searcher {
                 if (data.batteryLimit !== undefined) root.batteryLimit = data.batteryLimit;
                 if (data.pauseOnFullscreen !== undefined) root.pauseOnFullscreen = data.pauseOnFullscreen;
                 if (data.pauseOnGameMode !== undefined) root.pauseOnGameMode = data.pauseOnGameMode;
+                if(data.pauseOnWindowFocus !== undefined) root.pauseOnWindowFocus = data.pauseOnWindowFocus;
                 if (data.maxFps !== undefined) {
                     const fps = Number(data.maxFps);
                     root.maxFps = Number.isFinite(fps) ? Math.max(0, Math.min(60, Math.round(fps))) : 30;
@@ -90,6 +92,7 @@ Searcher {
             batteryLimit: root.batteryLimit,
             pauseOnFullscreen: root.pauseOnFullscreen,
             pauseOnGameMode: root.pauseOnGameMode,
+            pauseOnWindowFocus: root.pauseOnWindowFocus,
             maxFps: root.maxFps
         };
         liveSettingsView.setText(JSON.stringify(data, null, 4));
