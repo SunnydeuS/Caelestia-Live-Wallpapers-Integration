@@ -29,14 +29,7 @@ Item {
     function videoThumbSource(path) {
         if (!path || !isVideoSource(path))
             return "";
-
-        const parts = String(path).split("/");
-        if (parts.length < 3)
-            return "";
-
-        const homeDir = "/" + parts[1] + "/" + parts[2];
-        const fileName = parts[parts.length - 1];
-        return `${homeDir}/.cache/caelestia/live_thumbs/${fileName}.jpg`;
+        return Wallpapers.thumbnailPath(path);
     }
 
     function createMediaForSource(path, placeholderThumb = "") {
