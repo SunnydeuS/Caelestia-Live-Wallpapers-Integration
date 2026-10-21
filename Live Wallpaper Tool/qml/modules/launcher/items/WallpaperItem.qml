@@ -106,10 +106,7 @@ Item {
             path: {
                 let pathStr = String(root.modelData.path);
                 if (pathStr && pathStr.match(/\.(mp4|mkv|webm|avi|mov)$/i)) {
-                    let parts = pathStr.split("/");
-                    let homeDir = "/" + parts[1] + "/" + parts[2];
-                    let fileName = parts[parts.length - 1];
-                    return homeDir + "/.cache/caelestia/live_thumbs/" + fileName + ".jpg";
+                    return Wallpapers.thumbnailPath(pathStr);
                 }
                 return pathStr || "";
             }

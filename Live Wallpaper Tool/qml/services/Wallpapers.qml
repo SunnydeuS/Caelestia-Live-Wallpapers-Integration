@@ -146,6 +146,11 @@ Searcher {
         return String(path || "").replace(/^file:\/\//, "");
     }
 
+    function thumbnailPath(path: string): string {
+        const fileName = cleanWallpaperPath(path).split("/").pop() || "";
+        return `${Paths.home}/.cache/caelestia/live_thumbs/${fileName}.jpg`;
+    }
+
     function playbackPath(path: string): string {
         const clean = cleanWallpaperPath(path);
         if (!clean)
@@ -218,6 +223,8 @@ Searcher {
     function refreshWallpapers(): void {
         refreshProc.running = true;
     }
+
+    Component.onCompleted: Qt.callLater(() => refreshWallpapers())
 
     Process {
         id: transcodeProc

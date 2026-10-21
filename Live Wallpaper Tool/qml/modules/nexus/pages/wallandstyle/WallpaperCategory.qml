@@ -44,10 +44,7 @@ PageBase {
                     if (!modelData) return "";
                     let path = String(modelData.path);
                     if (path.match(/\.(mp4|mkv|webm|avi|mov)$/i)) {
-                        let parts = path.split("/");
-                        let homeDir = "/" + parts[1] + "/" + parts[2];
-                        let fileName = parts[parts.length - 1];
-                        return homeDir + "/.cache/caelestia/live_thumbs/" + fileName + ".jpg";
+                        return Wallpapers.thumbnailPath(path);
                     }
                     return path;
                 }
